@@ -27,6 +27,7 @@ It will attempt to find the file using the specified path at ```config.txt```, a
 
 | Syntax | Typing | Rule Applied |
 | :----: | :----- | :----------- |
+| :----: | :----: | :----------- |
 | () | Checks unit against () | unit Introduction Check |
 | x | Synthesizes the type A associated to x in the environment | Var Synthesis |
 | \x.t | Checks t against B assuming gamma extended with (x:A), and (\x.t) must check against (A->B) | Arrow Introduction Check |
