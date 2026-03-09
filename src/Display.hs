@@ -1,0 +1,63 @@
+module Display where
+
+import Lexer
+import Syntax
+
+showTerm' :: TermNode -> String
+showTerm' t = 
+  case showTerm [] t of
+    "()" -> showTerm [] t
+    _ -> removeOuterParens $ showTerm [] t
+
+showTerm :: NameContext -> TermNode -> String
+showTerm ctx t = let tm = getTm t in
+  case tm of
+    TmVar k l x -> let ctxLength = length ctx in
+      if l == ctxLength
+        then getNameFromContext ctx k x
+        else tmVarErr l ctxLength
+    TmAbs x t1 ->
+      let x' = fixName' x
+       in "(" ++ "λ" ++ x' ++ "." ++ showTerm (x':ctx) t1 ++ ")"
+    TmApp t1 t2 -> "(" ++ showTerm' t1 ++ " " ++ showTerm' t2 ++ ")"
+    TmUnit -> "()"
+    TmAnno t1 ty -> "(" ++ showTerm' t1 ++ " : " ++ showType ctx ty ++ ")"
+  where showTerm' = showTerm ctx
+        fixName' = fixName ctx
+        tmVarErr l ctxLength = "#TmVar: bad context length: " ++ show l ++ "/=" ++ show ctxLength ++ "#"
+
+showType' :: Type -> String
+showType' ty = removeOuterParens $ showType [] ty
+
+showType :: NameContext -> Type -> String
+showType ctx ty =
+  case ty of
+    TyUnit -> "unit"
+    TyArrow ty1 ty2 -> "(" ++ showType' ty1 ++ " → " ++ showType' ty2 ++ ")"
+  where showType' = showType ctx
+
+getNameFromContext :: NameContext -> Index -> Name -> Name
+getNameFromContext ctx ind x | ind >= 0 && ind < length ctx = ctx !! ind
+                             | otherwise = x --"#TmVar: no name context for var#"
+
+fixName :: NameContext -> Name -> Name
+fixName ctx x | (length $ filter ((==) x) ctx) < 1 = x
+              | otherwise = fixName ctx (x ++ "\'")
+
+showFileInfo :: FileInfo -> String
+showFileInfo (AlexPn p l c) =
+  "\n" ++"Absolute Offset: " ++ show p ++ "\n"
+  ++ "Line: " ++ show l ++ "\n"
+  ++ "Column: " ++ show c
+
+removeOuterParens :: String -> String
+removeOuterParens xs
+  | length xs >= 2 =
+    let xs' = reverse $ getTail xs
+     in
+      if getHead xs == '(' && getHead xs' == ')'
+        then reverse $ getTail xs'
+        else xs
+  | otherwise = xs
+  where getHead = (\(x:_) -> x)
+        getTail = (\(_:xs) -> xs)
