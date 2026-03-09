@@ -2,7 +2,7 @@
 ## Introduction
 **V**ery **S**imple **B**i**D**irectional **T**yping.
 
-Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey **Bidirectional Typing** \[2020\].
+Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey: **Bidirectional Typing** \[2020\].
 
 ## Input for VSBDT
 
