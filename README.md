@@ -36,4 +36,4 @@ This should suffice:
 
 ## Some Insights
 
-Despite how arid this particular type system may seem to be (it only posesses the unit base type, after all), it's quite useful for having a first glance at how bidirectional typing is implemented. The core idea is that there are two modes of typing, and when a premise must employ the **checking** mode, its own inference rule requires its conclusion - that is, the premise in question - to employ the same mode (in this case checking). And vice-versa for **synthesis**.
+Despite how arid this particular type system may seem to be (it only posesses the unit base type, after all), it's quite useful for having a first glance at how bidirectional typing could be implemented. The core idea is that there are two modes of typing, and when a premise must employ the **checking** mode, its own inference rule requires its conclusion - that is, the premise in question - to employ the same mode (in this case, checking). And vice-versa for **synthesis**.
