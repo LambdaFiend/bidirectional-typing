@@ -1,6 +1,6 @@
 # VSBDT
 ## Introduction
-Very Simple BiDirectional Typing.
+**V**ery **S**imple **B**i**D**irectional **T**yping.
 
 Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey **Bidirectional Typing** \[2020\].
 
