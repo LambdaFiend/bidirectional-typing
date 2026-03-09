@@ -21,7 +21,6 @@ main = do
     then do
       txt <- readFile $ (\ws -> case ws of [x, y] -> y; _ -> error "Main: there was a serious problem with the filepath") path'
       let cfg = words txt
-      putStrLn $ concat $  words txt
       term <- getTermFromAST txt
       case term of
         Left e -> return ()
