@@ -20,6 +20,9 @@ This should suffice:
 
 ```cabal run```
 
+## The effects of running VSBDT
+It will attempt to find the file using the specified path at ```config.txt```, and if everything is correct it should show the parsed program and output it's detected type right after.
+
 ## Syntax and Semantics
 
 | Syntax | Typing | Rule Applied |
@@ -39,3 +42,6 @@ This should suffice:
 ## Some insights
 
 Despite how arid this particular type system may seem to be (it only posesses the unit base type, after all), it's quite useful for having a first glance at how bidirectional typing could be implemented. The core idea is that there are two modes of typing, and when a premise must employ the **checking** mode, its own inference rule requires its conclusion - that is, the premise in question - to employ the same mode (in this case, checking). And vice-versa for **synthesis**.
+
+## Report any bugs
+Do not forget to report any bugs. I'll be very glad to listen to any complaints.
