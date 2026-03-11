@@ -1,4 +1,10 @@
+# SFBDT
+**S**ystem **F** **B**i**D**irectional **T**yping.
+
+Currently a work-in-progress. The contents of the VSBDT branch are exactly what's being described up ahead. 
+
 # VSBDT
+
 ## An informal introduction
 **V**ery **S**imple **B**i**D**irectional **T**yping.
 
