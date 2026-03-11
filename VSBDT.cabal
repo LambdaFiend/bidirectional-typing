@@ -29,7 +29,7 @@ extra-source-files: input.in
 common warnings
   --ghc-options: 
 
-executable YALCI
+executable VSBDT
   import:         warnings
   main-is:        Main.hs
   hs-source-dirs: src
