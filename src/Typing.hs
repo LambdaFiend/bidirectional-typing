@@ -13,9 +13,10 @@ synth ctx t = let tm = getTm t in
     TmApp t1 t2 ->
       case synth ctx t1 of
         TyArrow ty1 ty2 | check ctx t2 ty1 -> ty2
-        _ -> TyError $ removeOuterParens $ showTerm (map fst ctx) t
+        _ -> errorResult
     TmAnno t1 ty1 | check ctx t1 ty1 -> ty1
-    _ -> TyError $ removeOuterParens $ showTerm (map fst ctx) t
+    _ -> errorResult
+  where errorResult = TyError $ removeOuterParens $ showTerm (map fst ctx) t
 
 check :: TypeContext -> TermNode -> Type -> Bool
 check ctx t ty = let tm = getTm t in
