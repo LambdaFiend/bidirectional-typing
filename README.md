@@ -37,7 +37,7 @@ It will attempt to find the file using the specified path at ```config.txt```, a
 | Types | Meaning |
 | :---: | :------ |
 | unit | The only base type, with<br>no real meaning in itself |
-| T1->T2 | Type arrow, generated<br>byterm abstractions |
+| T1->T2 | Type arrow, generated<br>by term abstractions |
 
 ## Some insights
 
