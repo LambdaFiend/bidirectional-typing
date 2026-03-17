@@ -1,24 +1,13 @@
 # SFBDT
-**S**ystem **F** **B**i**D**irectional **T**yping.
-
-Currently a work-in-progress. The contents of the VSBDT branch are exactly what's being described up ahead. 
-
-# VSBDT
 
 ## An informal introduction
-**V**ery **S**imple **B**i**D**irectional **T**yping.
 
-Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey: **Bidirectional Typing** \[2020\].
+**S**ystem **F** **B**i**D**irectional **T**yping.
 
-## Input for VSBDT
+Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey: **Complete and Easy Bidirectional Typechecking
+for Higher-Rank Polymorphism** \[2013\].
 
-In order to use VSBDT, write a program into a file from within the ```programs/``` directory. The ```config.txt``` file is used for changing the path of the targeted file for using the program. The default file is ```input.in```. In order to use a file as input, define the contents of ```config.txt``` so that they respect the following format, replacing \<path\> with the actual path: ```path=\<path\>```. 
-
-An example:
-
-```path=programs/input.in```
-
-## Actually running VSBDT
+## Actually running SFBDT
 
 This should suffice:
 
@@ -26,8 +15,13 @@ This should suffice:
 
 ```cabal run```
 
-## The effects of running VSBDT
-It will attempt to find the file using the specified path at ```config.txt```, and if everything is correct it should show the parsed program and output it's detected type right after.
+## Using SFBDT
+
+SFBDT is a REPL. So, in order to use it, you may either write into a file inside the ```programs``` directory, or directly use the REPL's mid-execution features.
+
+## Understanding SFBDT's Language
+
+Check the referenced article, the example inputs from ```programs/default_tests.txt``` and try using the REPL for a little while.
 
 ## Syntax and Semantics
 
@@ -43,11 +37,52 @@ It will attempt to find the file using the specified path at ```config.txt```, a
 | Types | Meaning |
 | :---: | :------ |
 | unit | The only base type, with<br>no real meaning in itself |
-| T1->T2 | Type arrow, generated<br>byterm abstractions |
+| T1->T2 | Type arrow, generated<br>by term abstractions |
+| t | A type variable for<br>polymorphic as well as<br>monomorphic types, which<br> may contain upper and lower<br>case letters, and be include any<br>number of apostrophes at<br>the end of itself |
+| ∀t.T' | Used for polymorphic types,<br>it binds type variables<br>which themselves are monomorphic<br>although instantiable; also,<br>other syntactic forms for ∀<br>are forall and All |
+
+## REPL's Commands
+
+Most of the commands are simple and related in purpose. The table is dense because there are multiple configurations for the same thing. It was not well thought out, but serves its purpose. I hope this was not too much of a hurdle.
+
+| Command(s) | Usage | Description |
+|------------|-------|------------|
+| *(All commands)* | — | Command names (the first token of the command) are not case sensitive. |
+| :var, :v, :assign, :a | :v \<var_name\> | Assign a written term to <var_name>. |
+| :type, :ty, :t | :t \<var_name\> | Show the type of the term assigned to <var_name>. |
+| :eval, :ev, :e | :e \<var_name\> | Fully evaluate the term from <var_name>. |
+| :evaln, :evn, :en | :en <number_of_steps> <var_name> | Evaluate (<number_of_steps>) n-steps the term from <var_name>. |
+| :help, :h, :? | :h | Display information regarding the commands. |
+| :show, :sh, :s | :s \<var_name\> | Show the term assigned to <var_name>. |
+| :var, :v, :assign, :a, (+ eval) | :v <var_name1> :ev <var_name2> | Evaluate from the current environment (given <var_name2>) and store into <var_name1>. |
+| :var, :v, :assign, :a, (+ evaln) | :v <var_name1> :evn <number_of_steps> <var_name2> | Evaluate n-steps from the current environment and store into <var_name1>. |
+| :load, :l | :l \<file_path\> | Load terms from file at <file_path>, assigned as `<var_name> := <expression>`, and load into the environment. |
+| :v?, :vars | :v? | Show the first page (10 environment variables) if a number is not specified. |
+| :v?, :vars | :v? \<number\> | Show the <number>'th page (containing 10 environment variables' names). |
+| :m, :mv, :move | :mv \<var_name1\> \<var_name2\> | Store the contents of <var_name2> into <var_name1>. |
+| :q, :quit | :q | Close the REPL. |
+| :te, :tenv, :testenv | :testenv | Attempt to type all variables in the environment. |
+| :ee, :eenv, :evalenv | :evalenv | Attempt to evaluate all variables in the environment. |
+| :c, :ce, :cenv, :clear, :clearenv | :c | Clear the environment (no variables accessible until new ones are added). |
+| :av?, :allvars | :av? | Show all variables in the environment. |
+| :showenv, :showe, :senv, :se | :se | Show the environment. |
+| :showenv, :showe, :senv, :se | :se \<page_number\> | Show a specific environment page. |
+| :te, :tenv, :testenv | :te \<page_number\> | Type a specific environment page. |
+| :ee, :eenv, :evalenv | :ee \<page_number\> | Evaluate a specific environment page. |
+| \<program\> | \<program\> | Shows, then Types and then Evaluates the given program/term. |
+| *(Environment pages)* | — | Page numbers start at 1. |
+
+In contrast to YALCI's REPL, this one does not include desugaring, as it would hold no relevance to the language and its respective type system.
 
 ## Some insights
 
-Despite how arid this particular type system may seem to be (it only posesses the unit base type, after all), it's quite useful for having a first glance at how bidirectional typing could be implemented. The core idea is that there are two modes of typing, and when a premise must employ the **checking** mode, its own inference rule requires its conclusion - that is, the premise in question - to employ the same mode (in this case, checking). And vice-versa for **synthesis**.
+Just like VSBDT's, this bidirectional type system only has the unit base type. Indeed, this means the degree of expressivity of this type system depends entirely on how we can use System F to encode meaningful structures.
+
+No type annotations are required whatsoever, as let-bindings are not included in the implementation. Thus, one may wonder what purpose annotations serve: mainly, it allows for the downcasting of a term's type.
+
+Furthermore, this polymorphism is impredicative. In practice, it means that, unlike System F, this system won't allow an abstracted variable (which, therefore, occurs multiple times) to be instantiated to more than one unique type. Now, technically, it means that we can't instantiate type variables to polymorphic types, precisely because type variables must be monomorphic. There are some examples of this inside the ```programs/default_tests.txt``` file.
+
+Despite this restriction, this type system manages to be quite appealing. Its degree of expressivity does not need to be pushed further in a variety of real-life scenarios, and it brings great comfort to the programmer for not having to write any annotations. However, it should be noted that a lack of let-bindings makes the code less intuitive.
 
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
