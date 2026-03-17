@@ -12,14 +12,15 @@ import Syntax
 
 %token
 
-"."  { Token pos DOT }
-":"  { Token pos SEMI }
-"("  { Token pos LPAREN }
-")"  { Token pos RPAREN }
-"\\" { Token pos LAMBDA }
-"->" { Token pos ARROW }
-unit { Token pos TYUNIT }
-id   { Token pos (ID s) }
+"."    { Token pos DOT }
+":"    { Token pos SEMI }
+"("    { Token pos LPAREN }
+")"    { Token pos RPAREN }
+"\\"   { Token pos LAMBDA }
+forall { Token pos FORALL }
+"->"   { Token pos ARROW }
+unit   { Token pos TYUNIT }
+id     { Token pos (ID s) }
 
 %%
 
@@ -47,7 +48,11 @@ Name : id { (tokenPos $1, (\(ID s) -> s) $ tokenDat $1) }
 
 Abst : "\\" Name "." Term { TermNode (tokenPos $1) $ TmAbs (snd $2) $4 }
 
-Type : TypeArrow { $1 }
+Type : TypeForAll { $1 }
+
+TypeForAll
+  : forall Name "." Type  { TyForAll (snd $2) $4 }
+  | TypeArrow             { $1 }
 
 TypeArrow
   : TypeAtom "->" TypeArrow { TyArrow $1 $3 }
@@ -55,6 +60,7 @@ TypeArrow
 
 TypeAtom
   : unit         { TyUnit }
+  | Name         { TyVarRaw (snd $1) }
   | "(" Type ")" { $2 }
 
 {
