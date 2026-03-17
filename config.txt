@@ -1,1 +1,0 @@
-path=programs/input.in
