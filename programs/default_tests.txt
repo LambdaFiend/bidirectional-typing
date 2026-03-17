@@ -94,6 +94,8 @@ GenericExample6' := (\x.x) : unit -> unit
 
 GenericExample6'' := (\x.x) : (unit -> unit) -> (unit -> unit)
 
+GenericExample6''' := (\x.x) : forall X . unit -> unit
+
 SComb := \x.\y.\z.(x z) (y z)
 
 KComb := \x.\y.x
