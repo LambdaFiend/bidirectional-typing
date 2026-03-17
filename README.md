@@ -4,7 +4,7 @@
 
 ## An informal introduction
 
-Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey: **Complete and Easy Bidirectional Typechecking
+Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** paper: **Complete and Easy Bidirectional Typechecking
 for Higher-Rank Polymorphism** \[2013\].
 
 ## Actually running SFBDT
