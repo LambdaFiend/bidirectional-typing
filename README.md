@@ -1,8 +1,8 @@
 # SFBDT
 
-## An informal introduction
-
 **S**ystem **F** **B**i**D**irectional **T**yping.
+
+## An informal introduction
 
 Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey: **Complete and Easy Bidirectional Typechecking
 for Higher-Rank Polymorphism** \[2013\].
