@@ -1,6 +1,8 @@
 # VSBDT
-## An informal introduction
+
 **V**ery **S**imple **B**i**D**irectional **T**yping.
+
+## An informal introduction
 
 Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey: **Bidirectional Typing** \[2020\].
 
