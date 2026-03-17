@@ -84,7 +84,7 @@ No type annotations are required whatsoever, as let-bindings are not included in
 
 Furthermore, this polymorphism is impredicative. In practice, it means that, unlike System F, this system won't allow an abstracted variable (which occurs multiple times) to be instantiated to more than one unique type. Now, technically, it means that we can't instantiate type variables to polymorphic types, precisely because type variables must be monomorphic. There are some examples of this inside the ```programs/default_tests.txt``` file.
 
-Despite this restriction, this type system manages to be quite appealing. Its degree of expressivity does not need to be pushed further in a variety of real-life scenarios, and it brings great comfort to the programmer for not having to write any annotations. However, it should be noted that a lack of let-bindings makes the code less intuitive.
+Despite this restriction, this type system manages to be quite appealing. Its degree of expressivity does not need to be pushed further in a variety of real-life scenarios, and it brings great comfort to the programmer for not having to write any annotations. However, it should be noted that a lack of let-bindings as well as fixed point iterators makes the code less intuitive and too restrictive.
 
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
