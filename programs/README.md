@@ -1,2 +1,2 @@
-Write a program inside a file and don't forget to change the config.txt file so that the program detects the file you want it to detect.
+Write a program inside a file and then load the file with the command ```:l <file_path>``` while using the REPL. The file path starts at ```program/```, which means you must not add ```program/``` to the path.
 
