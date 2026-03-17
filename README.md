@@ -6,6 +6,8 @@
 
 Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** survey: **Bidirectional Typing** \[2020\].
 
+This was made for a university project under the guidance of professor Mário Florido.
+
 ## Input for VSBDT
 
 In order to use VSBDT, write a program into a file from within the ```programs/``` directory. The ```config.txt``` file is used for changing the path of the targeted file for using the program. The default file is ```input.in```. In order to use a file as input, define the contents of ```config.txt``` so that they respect the following format, replacing \<path\> with the actual path: ```path=\<path\>```. 
