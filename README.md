@@ -25,14 +25,16 @@ Check the referenced article, the example inputs from ```programs/default_tests.
 
 ## Syntax and Semantics
 
-| Syntax | Typing | Rule Applied |
-| :----: | :----- | :----------- |
-| () | Checks unit against () | unit Introduction Check |
-| x | Synthesizes the type A<br>associated to x in the environment | Var Synthesis |
-| \x.t | Checks t against B assuming<br> gamma extended with (x:A), and<br>(\x.t) must check against (A->B) | Arrow Introduction Check |
-| t1 t2 | Synthesizes (A->B) for t1,<br>checks t2 against A and then<br>synthesizes B for (t1 t2) | Arrow Elimination Syntehsis |
-| t : T | Checks t against T and then<br>synthesizes T for (t : T) | Annotation Synthesis |
-| - | Additionally, if, when checking<br>against B, a rule does not<br>have a match, subsumption is<br>applied and thus synthesizes A,<br>and (A=B) must be a true statement | Subsumption Check |
+Regarding the Typing and the Meaning for each syntax construct, I'll add it later on. This system is far more complex than that of VSBDT, which means I can't simply describe the typing of each contruct using a small table. I will have to think this through first.
+
+| Syntax |
+| :----: |
+| () |
+| x |
+| \x.t |
+| t1 t2 |
+| t : T |
+| - |
 
 | Types | Meaning |
 | :---: | :------ |
