@@ -8,7 +8,7 @@ description:
   It only permits the unit type, which can be composed by using arrow types.
   Based on Jana Dunfield's and Neelakantan R. Krishnaswami's small example of a typing (for a very simple language) which follows Pfenning's recipe for bidirectional typing.
 
-homepage: https://github.com/LambdaFiend/BDT
+homepage:     https://github.com/LambdaFiend/bidirectional-typing/tree/VSBDT
 license:      BSD-3-Clause
 license-file: LICENSE
 author:       Gabriel Carlos
