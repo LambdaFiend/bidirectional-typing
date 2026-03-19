@@ -52,16 +52,10 @@ genIndex :: [Name] -> TermNode -> UpdatedTmArrTm
 genIndex ctx t = let tm = getTm t; fi = getFI t; genIndex' = genIndex ctx in
   UpdatedTmArrTm $
   case tm of
-    TmVarRaw x -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
+    TmVarRaw x | elem x ctx -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
+    TmVarRaw x -> errorWithoutStackTrace "The given term has free variables, but they are not allowed in VSBDT"
     TmAbs x t1 -> (TermNode fi $ TmAbs x t1, genIndex (x:ctx), genIndex', id :: Type -> Type)
     _ -> (t, genIndex', genIndex', id :: Type -> Type)
-{--
-  where genIndexType :: [Name] -> Type -> Type
-        genIndexType ctx ty =
-          case ty of
-            TyArrow t1 t2 -> TyArrow (genIndexType ctx t1) (genIndexType ctx t2)
-            _ -> ty
---}
 
 id' :: TermNode -> UpdatedTmArrTm
 id' t = UpdatedTmArrTm (t, id', id', id :: Type -> Type)
