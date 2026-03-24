@@ -3977,7 +3977,7 @@ alex_actions = Data.Array.array (0 :: Int, 21)
   ]
 
 alex_action_1 = \pos _ -> Token pos DOT
-alex_action_2 = \pos _ -> Token pos SEMI
+alex_action_2 = \pos _ -> Token pos COLON
 alex_action_3 = \pos _ -> Token pos LPAREN
 alex_action_4 = \pos _ -> Token pos RPAREN
 alex_action_5 = \pos _ -> Token pos LAMBDA
@@ -4227,7 +4227,7 @@ data Token = Token
 
 data TokenData
   = DOT
-  | SEMI
+  | COLON
   | LPAREN
   | RPAREN
   | LAMBDA
