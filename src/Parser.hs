@@ -227,7 +227,7 @@ happyReduction_17 _ _ _  = notHappyAtAll
 
 happyTerminalToTok term = case term of {
         Token pos DOT -> 2#;
-        Token pos SEMI -> 3#;
+        Token pos COLON -> 3#;
         Token pos LPAREN -> 4#;
         Token pos RPAREN -> 5#;
         Token pos LAMBDA -> 6#;
