@@ -13,7 +13,7 @@ tokens :-
 
 $white+  ;
 "."            { \pos _ -> Token pos DOT }
-":"            { \pos _ -> Token pos SEMI }
+":"            { \pos _ -> Token pos COLON }
 "("            { \pos _ -> Token pos LPAREN }
 ")"            { \pos _ -> Token pos RPAREN }
 (\\)|"λ"       { \pos _ -> Token pos LAMBDA }
