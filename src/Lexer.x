@@ -32,7 +32,7 @@ data Token = Token
 
 data TokenData
   = DOT
-  | SEMI
+  | COLON
   | LPAREN
   | RPAREN
   | LAMBDA
