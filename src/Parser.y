@@ -13,7 +13,7 @@ import Syntax
 %token
 
 "."    { Token pos DOT }
-":"    { Token pos SEMI }
+":"    { Token pos COLON }
 "("    { Token pos LPAREN }
 ")"    { Token pos RPAREN }
 "\\"   { Token pos LAMBDA }
