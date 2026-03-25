@@ -27,7 +27,7 @@ Check the referenced article, the example inputs from ```programs/default_tests.
 
 ## Syntax and Semantics
 
-Regarding the Typing and the Meaning for each syntax construct, I'll add it later on. This system is far more complex than that of VSBDT, which means I can't simply describe the typing of each contruct using a small table. I will have to think this through first.
+Regarding the "Typing" and the "Meaning" columns, one for each syntax construct, I might add them later on. This system is far more complex than that of VSBDT, which means I'm unlikely to be able to simply describe the typing of each contruct using a small table. I will have to think this through first.
 
 | Syntax |
 | :----: |
@@ -78,7 +78,7 @@ Most of the commands are simple and related in purpose. The table is dense becau
 
 In contrast to YALCI's REPL, this one does not include desugaring, as it would hold no relevance to the language and its respective type system.
 
-## Some insights
+## Some insights of mine
 
 Just like VSBDT's, this bidirectional type system only has the unit base type. Indeed, this means the degree of expressivity of this type system depends entirely on how we can use System F to encode meaningful structures.
 
@@ -86,7 +86,9 @@ No type annotations are required whatsoever, as let-bindings are not included in
 
 Furthermore, this polymorphism is impredicative. In practice, it means that, unlike System F, this system won't allow an abstracted variable (which occurs multiple times) to be instantiated to more than one unique type. Now, technically, it means that we can't instantiate type variables to polymorphic types, precisely because type variables must be monomorphic. There are some examples of this inside the ```programs/default_tests.txt``` file.
 
-Despite this restriction, this type system manages to be quite appealing. Its degree of expressivity does not need to be pushed further in a variety of real-life scenarios, and it brings great comfort to the programmer for not having to write any annotations. However, it should be noted that a lack of let-bindings as well as fixed point iterators makes the code less intuitive and too restrictive.
+Despite this restriction, this type system manages to be quite appealing. Its degree of expressivity does not need to be pushed further in a handful of scenarios, and it brings great comfort to the programmer for not having to write any annotations. However, in constrast, it should be noted that a lack of let-bindings as well as of fixed point iterators makes the act of programming less intuitive and even too restrictive.
 
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
+
+I do have (and will) to get better at Haskell.
