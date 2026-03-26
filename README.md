@@ -7,7 +7,7 @@
 Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** paper: **Complete and Easy Bidirectional Typechecking
 for Higher-Rank Polymorphism** \[2013\].
 
-This was made for a university project under the guidance of Professor Mário Florido.
+This was made for a university project under the guidance of **Professor Mário Florido**.
 
 ## Actually running SFBDT
 
