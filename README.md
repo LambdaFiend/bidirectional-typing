@@ -43,7 +43,7 @@ If there are type annotations in a function definition's term arguments, they mu
 | Bot | The most general type<br>in the subtyping system |
 | Top | The least general type<br>in the subtyping system |
 | X | A type variable for<br>polymorphic types, which<br>must begin with<br>an uppercase letter, and include any<br>number of apostrophes at<br>by the end |
-| All(X1,...,Xn).(T1,...,Tm)->R | Used for polymorphic types,<br>it binds type variables and<br>describes the input types tuple<br>and the result type |
+| All(X1,...,Xn)(T1,...,Tm)->R | Used for polymorphic types,<br>it binds type variables and<br>describes the input types tuple<br>and the result type |
 
 ## REPL's Commands
 
