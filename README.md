@@ -84,6 +84,8 @@ In contrast to YALCI's REPL, this one does not include desugaring, as it would h
 
 At the moment LTIBDT can only parse and print expressions back, so it's rather limited.
 
+I would like to refactor the code in a way it enforces the bindings in function declarations to be distinct, without validation alone.
+
 I will complete this section once I've delved deeper into the implementation, although I could probably mention a couple of things.
 
 ## Report any bugs
