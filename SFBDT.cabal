@@ -1,7 +1,7 @@
 cabal-version: 3.0
 name:          SFBDT
 version:       0.1.0.0
-synopsis:      An implementation of a bidirectional-style, predicative type system, centered around the capabilities of System F.
+synopsis:      An implementation of a bidirectional, predicative type system, centered around the capabilities of System F.
 
 description:
   This is a piece of a small sequence of languages which support bidirectional typing.
