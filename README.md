@@ -1,15 +1,14 @@
-# SFBDT
+# LTIBDT
 
-**S**ystem **F** **B**i**D**irectional **T**yping.
+**L**ocal **T**ype **I**nference **B**i**D**irectional **T**yping.
 
 ## An informal introduction
 
-Please refer to **Jana Dunfield's** and **Neelakantan R. Krishnaswami's** paper: **Complete and Easy Bidirectional Typechecking
-for Higher-Rank Polymorphism** \[2013\].
+Please refer to **Benjamin Pierce's** and **David Turner's** article: **Local Type Inference** \[2000\].
 
 This was made for a university project under the guidance of Professor Mário Florido.
 
-## Actually running SFBDT
+## Actually running LTIBDT
 
 This should suffice:
 
@@ -17,33 +16,34 @@ This should suffice:
 
 ```cabal run```
 
-## Using SFBDT
+## Using LTIBDT
 
-SFBDT is a REPL. So, in order to use it, you may either write into a file inside the ```programs``` directory, or directly use the REPL's mid-execution features.
+LTIBDT is a REPL. So, in order to use it, you may either write into a file inside the ```programs``` directory, or directly use the REPL's mid-execution features.
 
-## Understanding SFBDT's Language
+## Understanding LTIBDT's Language
 
 Check the referenced article, the example inputs from ```programs/default_tests.txt``` and try using the REPL for a little while.
 
 ## Syntax and Semantics
 
-Regarding the "Typing" and the "Meaning" columns, one for each syntax construct, I might add them later on. This system is far more complex than that of VSBDT, which means I'm unlikely to be able to simply describe the typing of each contruct using a small table. I will have to think this through first.
+Regarding the Typing for each syntax construct, I might add it later on. This system is far more complex than that of VSBDT, which means I can't simply describe the typing of each contruct using a small table. I will have to think this through first.
 
-| Syntax |
-| :----: |
-| () |
-| x |
-| \x.t |
-| t1 t2 |
-| t : T |
-| - |
+| Syntax | Meaning |
+| :----: | :------ |
+| x | A term variable |
+| fun[X1,...,Xn](x1,...,xm)t | Function definition, also<br>known as abstraction,<br>albeit uncurried |
+| fun[X1,...,Xn](x1:T1,...,xm:Tm)t | Function definition but<br>with type annotations |
+| t1 [T1,...,Tn] (t21,...,t2m) | Function application |
+| t1 (t21,...,t2m) | Function application when the<br>type variables will be inferred |
+
+If there are type annotations in a function definition's term arguments, they must appear in every single term argument.
 
 | Types | Meaning |
 | :---: | :------ |
-| unit | The only base type, with<br>no real meaning in itself |
-| T1->T2 | Type arrow, generated<br>by term abstractions |
-| t | A type variable for<br>polymorphic as well as<br>monomorphic types, which<br> may contain upper and lower<br>case letters, and be include any<br>number of apostrophes at<br>the end of itself |
-| ∀t.T' | Used for polymorphic types,<br>it binds type variables<br>which themselves are monomorphic<br>although instantiable; also,<br>other syntactic forms for ∀<br>are forall and All |
+| Bot | The most general type<br>in the subtyping system |
+| Top | The least general type<br>in the subtyping system |
+| X | A type variable for<br>polymorphic types, which<br>must begin with<br>an uppercase letter, and include any<br>number of apostrophes at<br>by the end |
+| All(X1,...,Xn).(T1,...,Tm)->R | Used for polymorphic types,<br>it binds type variables and<br>describes the input types tuple<br>and the result type |
 
 ## REPL's Commands
 
@@ -78,17 +78,11 @@ Most of the commands are simple and related in purpose. The table is dense becau
 
 In contrast to YALCI's REPL, this one does not include desugaring, as it would hold no relevance to the language and its respective type system.
 
-## Some insights of mine
+## Some insights
 
-Just like VSBDT's, this bidirectional type system only has the unit base type. Indeed, this means the degree of expressivity of this type system depends entirely on how we can use System F to encode meaningful structures.
+At the moment LTIBDT can only parse and print expressions back, so it's rather limited.
 
-No type annotations are required whatsoever, as let-bindings are not included in the implementation. Thus, one may wonder what purpose annotations serve: mainly, it allows for the downcasting of a term's type.
-
-Furthermore, this polymorphism is impredicative. In practice, it means that, unlike System F, this system won't allow an abstracted variable (which occurs multiple times) to be instantiated to more than one unique type. Now, technically, it means that we can't instantiate type variables to polymorphic types, precisely because type variables must be monomorphic. There are some examples of this inside the ```programs/default_tests.txt``` file.
-
-Despite this restriction, this type system manages to be quite appealing. Its degree of expressivity does not need to be pushed further in a handful of scenarios, and it brings great comfort to the programmer for not having to write any annotations. However, in constrast, it should be noted that a lack of let-bindings as well as of fixed point iterators makes the act of programming less intuitive and even too restrictive.
+I will complete this section once I've delved deeper into the implementation, although I could probably mention a couple of things.
 
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
-
-I do have (and will) to get better at Haskell.

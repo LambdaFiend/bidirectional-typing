@@ -1,0 +1,60 @@
+cabal-version: 3.0
+name:          LTIBDT
+version:       0.1.0.0
+synopsis:      An implementation of a bidirectional, impredicative type system, centered around the capabilities of System F-sub.
+
+description:
+  Implementation of the first type system described in Benjamin Pierce's and David Turner's article "Local Type Inference".
+  What that means is that it's not the one which uses Bounded Quantification. That one may be implemented as part of a personal project.
+
+homepage:     https://github.com/LambdaFiend/bidirectional-typing/tree/LTIBDT
+license:      BSD-3-Clause
+license-file: LICENSE
+author:       Lambda Fiend
+maintainer:   thelambdafiend@gmail.com
+
+--copyright:
+
+category:   Language
+build-type: Simple
+
+extra-doc-files:
+  CHANGELOG.md
+  README.md
+  programs/README.md
+
+extra-source-files: default_tests.txt
+
+common warnings
+  --ghc-options: 
+
+executable LTIBDT
+  import:         warnings
+  main-is:        Main.hs
+  hs-source-dirs: src
+
+  other-modules:
+    Display,
+    Helper,
+    Lexer,
+    Parser,
+    Syntax,
+    Typing,
+    Evaluation
+
+  --other-extensions:
+
+  build-depends: 
+    base ^>=4.20.2.0,
+    array ^>=0.5.8.0,
+    directory ^>=1.3.10.1,
+    ansi-terminal ^>=1.1.5
+
+  hs-source-dirs:
+    app
+    src
+    programs
+
+  default-language: Haskell2010
+
+  --default-extensions:
