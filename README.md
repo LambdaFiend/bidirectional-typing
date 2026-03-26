@@ -6,6 +6,8 @@
 
 Please refer to **Benjamin Pierce's** and **David Turner's** article: **Local Type Inference** \[2000\].
 
+The other branches of this repository are different implementations of bidirectional typing. They are as worthwhile as this one, especially SFBDT.
+
 This was made for a university project under the guidance of **Professor Mário Florido**.
 
 ## Actually running LTIBDT
