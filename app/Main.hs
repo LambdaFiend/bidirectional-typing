@@ -1,72 +1,76 @@
 module Main where
 
-import Syntax
-import Evaluation
-import Typing
-import Display
-import Lexer
-import Parser
-import Helper
-
-import Data.Char
-import Data.List
-import System.IO
-import System.Directory
-import Control.Exception
-import System.Console.ANSI
+import           Control.Exception
+import           Data.Char
+import           Data.List
+import           Display
+import           Evaluation
+import           Helper
+import           Lexer
+import           Parser
+import           Syntax
+import           System.Console.ANSI
+import           System.Directory
+import           System.IO
+import           Typing
 
 type EnvVarName = String
+
 type Environment = [(EnvVarName, TermNode)]
+
 type CommandList = [String]
 
 getHelp :: String
-getHelp = (\s -> s ++ "\n") $ intercalate "\n" $
-  "Command names (the first token of the command) are not case sensitive.\n"
-    : "[:var, :v, :assign and :a assign a written term to <var_name>]\n"
-    : ":v <var_name>\n"
-    : "[:type, :ty and :t show the type of the term assiged to <var_name>]\n"
-    : ":t <var_name>\n"
-    : "[:eval, :ev and :e fully evaluate the term from <var_name>]\n"
-    : ":e <var_name>\n"
-    : "[:evaln, :evn and :en evaluate (<number_of_steps>) n-steps the term from <var_name>]\n"
-    : ":en <number_of_steps> <var_name>\n"
-    : "[:help, :h and :? display information regarding the commands]\n"
-    : ":h\n"
-    : "[:show, :sh and :s show the term assigned to <var_name>]\n"
-    : ":s <var_name>\n"
-    : ("[Additionally, for command :var, :v, :assign and :a, a third argument may be added, "
-      ++ "which is meant to be either :eval, :ev, :e, :evaln, :evn and :en, in which case "
-      ++ "it evaluates from the current environment (given a <var_name2>) and then stores it into <var_name1>]\n")
-    : ":v <var_name1> :ev <var_name2>\n"
-    : ":v <var_name1> :evn <number_of_steps> <var_name2>\n"
-    : "[:load and :l load terms from file at <file_path>, which are assigned inside the file as <var_name> := <expression>, and then loaded into the environment correspondingly]\n"
-    : ":l <file_path>\n"
-    : "[:v? and :vars show the first page (10 environment variables) of the environment, if a number is not specified]\n"
-    : ":v?\n"
-    : "[:v? and :vars will show the <number>'th page (containing 10 environment variables' names)]\n"
-    : ":v? <number>\n"
-    : "[:m, :mv and :move will store the contents of <var_name2> into <var_name1>]\n"
-    : ":mv <var_name1> <var_name2>\n"
-    : "[:q and :quit close the REPL]\n"
-    : ":q\n"
-    : "[:te, :tenv and :typeenv attempt to type all variables in the environment]\n"
-    : ":typeenv\n"
-    : "[:ee, :eenv and :evalenv attempt to evaluate all variables in the environment]\n"
-    : ":evalenv\n"
-    : "[:c, :ce, :cenv, :clear and :clearenv clear the environment, which means there will be no variables accessible until new ones are added]\n"
-    : ":c\n"
-    : "[:av? and :allvars show all variables in the environment]\n"
-    : ":av?\n"
-    : "[:showenv, :showe, :senv and :se]\n"
-    : ":se\n"
-    : "[The commands for showing, typing and evaluating the environment can also be used for environment pages, as follows]\n"
-    : ":se <page_number>\n"
-    : ":te <page_number>\n"
-    : ":ee <page_number>\n"
-    : "[Page numbers start at 1]\n"
-    : "[Programs may be executed directly in the command line; SFBDT will show, then type and then evaluate it]\n"
-    : "<program>"
-    : []
+getHelp =
+  (\s -> s ++ "\n") $
+    intercalate "\n" $
+      "Command names (the first token of the command) are not case sensitive.\n"
+        : "[:var, :v, :assign and :a assign a written term to <var_name>]\n"
+        : ":v <var_name>\n"
+        : "[:type, :ty and :t show the type of the term assiged to <var_name>]\n"
+        : ":t <var_name>\n"
+        : "[:eval, :ev and :e fully evaluate the term from <var_name>]\n"
+        : ":e <var_name>\n"
+        : "[:evaln, :evn and :en evaluate (<number_of_steps>) n-steps the term from <var_name>]\n"
+        : ":en <number_of_steps> <var_name>\n"
+        : "[:help, :h and :? display information regarding the commands]\n"
+        : ":h\n"
+        : "[:show, :sh and :s show the term assigned to <var_name>]\n"
+        : ":s <var_name>\n"
+        : ( "[Additionally, for command :var, :v, :assign and :a, a third argument may be added, "
+              ++ "which is meant to be either :eval, :ev, :e, :evaln, :evn and :en, in which case "
+              ++ "it evaluates from the current environment (given a <var_name2>) and then stores it into <var_name1>]\n"
+          )
+        : ":v <var_name1> :ev <var_name2>\n"
+        : ":v <var_name1> :evn <number_of_steps> <var_name2>\n"
+        : "[:load and :l load terms from file at <file_path>, which are assigned inside the file as <var_name> := <expression>, and then loaded into the environment correspondingly]\n"
+        : ":l <file_path>\n"
+        : "[:v? and :vars show the first page (10 environment variables) of the environment, if a number is not specified]\n"
+        : ":v?\n"
+        : "[:v? and :vars will show the <number>'th page (containing 10 environment variables' names)]\n"
+        : ":v? <number>\n"
+        : "[:m, :mv and :move will store the contents of <var_name2> into <var_name1>]\n"
+        : ":mv <var_name1> <var_name2>\n"
+        : "[:q and :quit close the REPL]\n"
+        : ":q\n"
+        : "[:te, :tenv and :typeenv attempt to type all variables in the environment]\n"
+        : ":typeenv\n"
+        : "[:ee, :eenv and :evalenv attempt to evaluate all variables in the environment]\n"
+        : ":evalenv\n"
+        : "[:c, :ce, :cenv, :clear and :clearenv clear the environment, which means there will be no variables accessible until new ones are added]\n"
+        : ":c\n"
+        : "[:av? and :allvars show all variables in the environment]\n"
+        : ":av?\n"
+        : "[:showenv, :showe, :senv and :se]\n"
+        : ":se\n"
+        : "[The commands for showing, typing and evaluating the environment can also be used for environment pages, as follows]\n"
+        : ":se <page_number>\n"
+        : ":te <page_number>\n"
+        : ":ee <page_number>\n"
+        : "[Page numbers start at 1]\n"
+        : "[Programs may be executed directly in the command line; LTIBDT will show, then type and then evaluate it]\n"
+        : "<program>"
+        : []
 
 main :: IO ()
 main = do
@@ -80,10 +84,10 @@ main = do
 
 main' :: Environment -> CommandList -> IO ()
 main' env comml = do
-  putStr "sfbdt> "
+  putStr "ltibdt> "
   command <- readLine' comml
   putStrLn ""
-  let commToks = (\comm -> case comm of (x:xs) -> map toLower x:xs; [] -> []) $ words command
+  let commToks = (\comm -> case comm of (x : xs) -> map toLower x : xs; [] -> []) $ words command
   env' <- case (commToks) of
     [] -> return env
     [tenv, k] | and (map isDigit k) && elem tenv [":te", ":tenv", ":typeenv"] -> do
@@ -165,7 +169,7 @@ main' env comml = do
       return env
     [quit] | elem quit [":q", ":quit"] -> do
       setSGR [SetColor Foreground Vivid Yellow]
-      putStrLn "Leaving sfbdt."
+      putStrLn "Leaving ltibdt."
       setSGR [Reset]
       return [("", TermNode noPos (TmError "Quit."))]
     [move, name1, name2] | elem move [":move", ":mv", ":m"] -> do
@@ -181,7 +185,7 @@ main' env comml = do
           setSGR [SetColor Foreground Vivid Green]
           putStrLn "Variable moved"
           setSGR [Reset]
-          return ((name1, fromMaybe x):env')
+          return ((name1, fromMaybe x) : env')
     [avars] | elem avars [":av?", ":allvars"] -> do
       setSGR [SetColor Foreground Vivid Yellow]
       putStrLn $ "All variables in the environment are:"
@@ -194,13 +198,16 @@ main' env comml = do
       setSGR [Reset]
       putStrLn $ (intercalate "\n") $ (take 10) $ map fst env
       return env
-    [vars, k] | and (map isDigit k) && elem vars [":v?", ":vars"] -> let k' = read k in do
-      setSGR [SetColor Foreground Vivid Yellow]
-      putStrLn $ "The variables for page number " ++ k ++ " (10 vars per page) are:"
-      setSGR [Reset]
-      putStrLn $ (intercalate "\n") $ (drop (10 * (k' - 1))) $ (take (10 * k')) $ map fst env
-      return env
-    [load, file] | elem load [":load", ":l"]-> do
+    [vars, k]
+      | and (map isDigit k) && elem vars [":v?", ":vars"] ->
+          let k' = read k
+           in do
+                setSGR [SetColor Foreground Vivid Yellow]
+                putStrLn $ "The variables for page number " ++ k ++ " (10 vars per page) are:"
+                setSGR [Reset]
+                putStrLn $ (intercalate "\n") $ (drop (10 * (k' - 1))) $ (take (10 * k')) $ map fst env
+                return env
+    [load, file] | elem load [":load", ":l"] -> do
       fileExists <- doesFileExist ("programs/" ++ file)
       if fileExists
         then do
@@ -227,7 +234,7 @@ main' env comml = do
           setSGR [SetColor Foreground Vivid Green]
           putStrLn "Variable assigned"
           setSGR [Reset]
-          return ((name, term'):env')
+          return ((name, term') : env')
     [ty, name] | elem ty [":type", ":ty", ":t"] -> do
       let x = lookup name env
       if x == Nothing
@@ -277,7 +284,7 @@ main' env comml = do
           return env
     [var, name1, ev, name2]
       | elem var [":var", ":v", ":assign", ":a"]
-        && elem ev [":eval", ":ev", ":e"] -> do
+          && elem ev [":eval", ":ev", ":e"] -> do
           let x = lookup name2 env
           if x == Nothing
             then do
@@ -289,11 +296,11 @@ main' env comml = do
               let term = fromMaybe x
               term' <- printEval term
               let env' = deleteByFstEnv name1 env
-              return ((name1, term'):env')
+              return ((name1, term') : env')
     [var, name1, ev, k, name2]
       | and (map isDigit k)
-        && elem var [":var", ":v", ":assign", ":a"]
-        && elem ev [":eval", ":ev", ":e"] -> do
+          && elem var [":var", ":v", ":assign", ":a"]
+          && elem ev [":eval", ":ev", ":e"] -> do
           let x = lookup name2 env
           if x == Nothing
             then do
@@ -305,8 +312,8 @@ main' env comml = do
               let term = fromMaybe x
               term' <- printEvalN (read k) term
               let env' = deleteByFstEnv name1 env
-              return ((name1, term'):env')
-    ((':':_):_) -> do
+              return ((name1, term') : env')
+    ((':' : _) : _) -> do
       setSGR [SetColor Foreground Vivid Red]
       putStrLn "Unknown command"
       setSGR [Reset]
@@ -334,19 +341,19 @@ main' env comml = do
   if env' == [("", TermNode noPos (TmError "Quit."))]
     then return ()
     else do
-      let comml' = if (filter (/= ' ') command) == "" then comml else (command:comml)
+      let comml' = if (filter (/= ' ') command) == "" then comml else (command : comml)
       appendFile "command_history.txt" (command ++ "\n")
       main' env' comml'
 
 deleteByFstEnv :: String -> Environment -> Environment
 deleteByFstEnv x xs =
   case break (\(x', _) -> x == x') xs of
-    (prev, _:next) -> prev ++ next
-    _              -> xs
+    (prev, _ : next) -> prev ++ next
+    _                -> xs
 
 showEnvironment :: Environment -> IO [String]
 showEnvironment [] = return []
-showEnvironment (e:env) = do
+showEnvironment (e : env) = do
   setSGR [SetColor Foreground Vivid Green]
   putStrLn $ fst e ++ ":"
   setSGR [Reset]
@@ -354,14 +361,14 @@ showEnvironment (e:env) = do
   case first of
     Left _ -> do
       rest <- showEnvironment env
-      return ((fst e ++ " had a display error"):rest)
+      return ((fst e ++ " had a display error") : rest)
     Right _ -> do
       rest <- showEnvironment env
       return rest
 
 typeEnvironment :: Environment -> IO [String]
 typeEnvironment [] = return []
-typeEnvironment (e:env) = do
+typeEnvironment (e : env) = do
   setSGR [SetColor Foreground Vivid Green]
   putStrLn $ fst e ++ ":"
   setSGR [Reset]
@@ -369,14 +376,14 @@ typeEnvironment (e:env) = do
   case first of
     Left _ -> do
       rest <- typeEnvironment env
-      return ((fst e ++ " had a type error"):rest)
+      return ((fst e ++ " had a type error") : rest)
     Right _ -> do
       rest <- typeEnvironment env
       return rest
 
 evalEnvironment :: Environment -> IO [String]
 evalEnvironment [] = return []
-evalEnvironment (e:env) = do
+evalEnvironment (e : env) = do
   setSGR [SetColor Foreground Vivid Green]
   putStrLn $ fst e ++ ":"
   setSGR [Reset]
@@ -384,7 +391,7 @@ evalEnvironment (e:env) = do
   case first of
     TermNode noPos (TmError "") -> do
       rest <- evalEnvironment env
-      return ((fst e ++ " had an evaluation error"):rest)
+      return ((fst e ++ " had an evaluation error") : rest)
     _ -> do
       rest <- evalEnvironment env
       return rest
@@ -394,11 +401,12 @@ simplyParseCommands' s = map (\(x, y) -> (x, intercalate " " y)) $ simplyParseCo
 
 simplyParseCommands :: [String] -> [(String, [String])]
 simplyParseCommands [] = []
-simplyParseCommands (name:":=":xs) = let expr = getExpression xs in (name, fst expr):(simplyParseCommands $ snd expr)
-  where getExpression :: [String] -> ([String], [String])
-        getExpression [] = ([], [])
-        getExpression s@(name:":=":xs) = ([], s)
-        getExpression (x:xs) = let next = getExpression xs in (x:(fst next), snd next)
+simplyParseCommands (name : ":=" : xs) = let expr = getExpression xs in (name, fst expr) : (simplyParseCommands $ snd expr)
+  where
+    getExpression :: [String] -> ([String], [String])
+    getExpression [] = ([], [])
+    getExpression s@(name : ":=" : xs) = ([], s)
+    getExpression (x : xs) = let next = getExpression xs in (x : (fst next), snd next)
 simplyParseCommands xs = []
 
 handleCommHistFile :: FilePath -> IO String
@@ -419,7 +427,7 @@ readLine (left, right) comml1 comml2 = do
   case currChar of
     '\n' -> return (left ++ right)
     '\DEL' -> case reverse left of
-      (_:ls) -> do
+      (_ : ls) -> do
         let left' = reverse ls
             lenLeft = length left
             lenRight = length right
@@ -427,10 +435,10 @@ readLine (left, right) comml1 comml2 = do
           then putStr $ "\ESC[1D \ESC[1D" ++ replicate lenRight ' '
           else do
             putStr "\r"
-            putStr $ "sfbdt> " ++ replicate (lenLeft + lenRight) ' '
+            putStr $ "ltibdt> " ++ replicate (lenLeft + lenRight) ' '
             putStr "\r"
-            putStr $ "sfbdt> " ++ left' ++ right
-            putStr $ "\ESC[" ++ show (length "sfbdt> " + lenLeft) ++ "G"
+            putStr $ "ltibdt> " ++ left' ++ right
+            putStr $ "\ESC[" ++ show (length "ltibdt> " + lenLeft) ++ "G"
         readLine (left', right) comml1 comml2
       [] -> readLine (left, right) comml1 comml2
     '\ESC' -> do
@@ -439,37 +447,37 @@ readLine (left, right) comml1 comml2 = do
       case n2 of
         'D' ->
           case reverse left of
-            (l:ls) -> do
+            (l : ls) -> do
               putStr "\ESC[1D"
-              readLine (reverse ls, l:right) comml1 comml2
+              readLine (reverse ls, l : right) comml1 comml2
             [] -> readLine (left, right) comml1 comml2
         'C' ->
           case right of
-            (r:rs) -> do
+            (r : rs) -> do
               putChar r
               readLine (left ++ [r], rs) comml1 comml2
             [] -> readLine (left, right) comml1 comml2
         'A' -> do
           case comml1 of
-            (c:cs) -> do
+            (c : cs) -> do
               putStr "\r"
-              putStr $ "sfbdt> " ++ replicate (length (left ++ right)) ' '
+              putStr $ "ltibdt> " ++ replicate (length (left ++ right)) ' '
               putStr "\r"
-              putStr $ "sfbdt> " ++ c
-              readLine (c, []) cs ((left++right):comml2)
+              putStr $ "ltibdt> " ++ c
+              readLine (c, []) cs ((left ++ right) : comml2)
             [] -> readLine (left, right) comml1 comml2
         'B' -> do
           case comml2 of
-            (c:cs) -> do
+            (c : cs) -> do
               putStr "\r"
-              putStr $ "sfbdt> " ++ replicate (length (left ++ right)) ' '
+              putStr $ "ltibdt> " ++ replicate (length (left ++ right)) ' '
               putStr "\r"
-              putStr $ "sfbdt> " ++ c
-              readLine (c, []) ((left ++ right):comml1) cs
+              putStr $ "ltibdt> " ++ c
+              readLine (c, []) ((left ++ right) : comml1) cs
             [] -> readLine (left, right) comml1 comml2
         key | key /= '\^C' -> readLine (left, right) comml1 comml2
     _ -> do
-      putStr (currChar:right)
+      putStr (currChar : right)
       putStr $ replicate (length right) '\b'
       readLine (left ++ [currChar], right) comml1 comml2
 
@@ -492,7 +500,7 @@ updateNextLines [x] n = do
   putStr "\r"
   putStr x
   putStr "\r"
-updateNextLines (x:xs) n = do
+updateNextLines (x : xs) n = do
   putStr "\r"
   putStr $ replicate (n + 1) ' '
   putStr "\r"
@@ -517,7 +525,7 @@ readUntil finalChar (left, right) prevLines nextLines currH maxH = do
         then putStr $ "\ESC[" ++ show lenNextLines ++ "B" ++ ""
         else return ()
       putStr "\n"
-      updateNextLines (reverse (right:nextLines)) 0
+      updateNextLines (reverse (right : nextLines)) 0
       putStr "\ESC[1A"
       putStr "\r"
       putStr $ replicate (length left + length right) ' '
@@ -525,9 +533,9 @@ readUntil finalChar (left, right) prevLines nextLines currH maxH = do
       putStr left
       putStr "\r"
       putStr "\ESC[1B"
-      readUntil finalChar ([], right) (left:prevLines) nextLines (currH + 1) (maxH + 1)
+      readUntil finalChar ([], right) (left : prevLines) nextLines (currH + 1) (maxH + 1)
     '\DEL' -> case reverse left of
-      (_:ls) -> do
+      (_ : ls) -> do
         let left' = reverse ls
             lenLeft = length left
             lenRight = length right
@@ -552,9 +560,9 @@ readUntil finalChar (left, right) prevLines nextLines currH maxH = do
           putStr $ left ++ right
           putStr $ replicate (length right) '\b'
           case reverse left of
-            (l:ls) -> do
+            (l : ls) -> do
               putStr "\ESC[1D"
-              readUntil finalChar (reverse ls, l:right) prevLines nextLines currH maxH
+              readUntil finalChar (reverse ls, l : right) prevLines nextLines currH maxH
             [] ->
               if currH > 0
                 then do
@@ -562,7 +570,7 @@ readUntil finalChar (left, right) prevLines nextLines currH maxH = do
                   putStr "\ESC[1A"
                   putStr "\r"
                   putStr $ left'
-                  readUntil finalChar (left', []) (getTail prevLines) ((left ++ right):nextLines) (currH - 1) maxH
+                  readUntil finalChar (left', []) (getTail prevLines) ((left ++ right) : nextLines) (currH - 1) maxH
                 else readUntil finalChar (left, right) prevLines nextLines currH maxH
         'C' -> do
           putStr "\r"
@@ -571,7 +579,7 @@ readUntil finalChar (left, right) prevLines nextLines currH maxH = do
           putStr $ left ++ right
           putStr $ replicate (length right) '\b'
           case right of
-            (r:rs) -> do
+            (r : rs) -> do
               putChar r
               readUntil finalChar (left ++ [r], rs) prevLines nextLines currH maxH
             [] ->
@@ -582,7 +590,7 @@ readUntil finalChar (left, right) prevLines nextLines currH maxH = do
                   putStr "\r"
                   putStr $ right'
                   putStr "\r"
-                  readUntil finalChar ([], right') ((left ++ right):prevLines) (getTail nextLines) (currH + 1) maxH
+                  readUntil finalChar ([], right') ((left ++ right) : prevLines) (getTail nextLines) (currH + 1) maxH
                 else readUntil finalChar (left, right) prevLines nextLines currH maxH
         'A' -> do
           if currH == 0
@@ -598,7 +606,7 @@ readUntil finalChar (left, right) prevLines nextLines currH maxH = do
               putStr "\r"
               putStr $ left' ++ right'
               putStr $ "\ESC[" ++ show (length left' + 1) ++ "G"
-              readUntil finalChar (left', right') (getTail prevLines) ((left ++ right):nextLines) (currH - 1) maxH
+              readUntil finalChar (left', right') (getTail prevLines) ((left ++ right) : nextLines) (currH - 1) maxH
         'B' -> do
           if currH == maxH
             then do
@@ -614,17 +622,18 @@ readUntil finalChar (left, right) prevLines nextLines currH maxH = do
               putStr "\r"
               putStr $ left' ++ right'
               putStr $ "\ESC[" ++ show (length left' + 1) ++ "G"
-              readUntil finalChar (left', right') ((left ++ right):prevLines) (getTail nextLines) (currH + 1) maxH
+              readUntil finalChar (left', right') ((left ++ right) : prevLines) (getTail nextLines) (currH + 1) maxH
         key | key /= '\^C' -> readUntil finalChar (left, right) prevLines nextLines currH maxH
     _ -> do
       if currChar == finalChar
         then return $ ([left ++ right], prevLines, nextLines)
         else do
-          putStr (currChar:right)
+          putStr (currChar : right)
           putStr $ replicate (length right) '\b'
           readUntil finalChar (left ++ [currChar], right) prevLines nextLines currH maxH
-  where getHead = \ls -> case ls of [] -> []; (x:xs) -> x
-        getTail = \ls -> case ls of [] -> []; (x:xs) -> xs
+  where
+    getHead = \ls -> case ls of [] -> []; (x : xs) -> x
+    getTail = \ls -> case ls of [] -> []; (x : xs) -> xs
 
 getTokens :: String -> IO [Token]
 getTokens txt = return $ alexScanTokens txt
@@ -634,7 +643,7 @@ getAST txt = do
   tok <- getTokens txt
   let tokErr = filter (\x -> case x of Token _ (ERROR e) -> True; _ -> False) tok
   case tokErr of
-    (x:xs) -> return $ Left $ (\(Token fi (ERROR e)) -> e ++ showFileInfo fi) $ x
+    (x : xs) -> return $ Left $ (\(Token fi (ERROR e)) -> e ++ showFileInfo fi) $ x
     [] -> return $ parser tok
 
 getTermFromAST :: String -> IO (Either String TermNode)
@@ -646,11 +655,18 @@ getTermFromAST txt = do
       putStrLn e
       setSGR [Reset]
       return $ Left ""
-    Right ast' -> return $ Right $ genIndex' ast'
+    Right ast' ->
+      case findConflicts' ast' of
+        Left e -> do
+          setSGR [SetColor Foreground Vivid Red]
+          putStrLn e
+          setSGR [Reset]
+          return $ Left ""
+        _ -> return $ Right $ genIndex' ast'
 
 getMultipleASTsFromTerms :: [(String, String)] -> IO [(String, TermNode)]
 getMultipleASTsFromTerms [] = return []
-getMultipleASTsFromTerms (x:xs) = do
+getMultipleASTsFromTerms (x : xs) = do
   term <- getTermFromAST $ snd x
   next <- getMultipleASTsFromTerms xs
   case term of
@@ -660,30 +676,31 @@ getMultipleASTsFromTerms (x:xs) = do
       putStrLn $ fst x
       setSGR [Reset]
       return next
-    Right term' -> return ((fst x, term'):next)
+    Right term' -> return ((fst x, term') : next)
 
 printEval :: TermNode -> IO TermNode
 printEval ast = do
-  ast' <- if isVal ast
-    then do
-      putStrLn "The given term is already a value"
-      return ast
-    else do
-      let ast' = eval' ast
-          errs = findTermErrors' $ snd ast'
-      if errs /= []
-        then do
-          putStrLn errs
-          setSGR [SetColor Foreground Vivid Red]
-          putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-          setSGR [Reset]
-          return $ TermNode noPos $ TmError ""
-        else do
-          setSGR [SetColor Foreground Vivid Green]
-          putStrLn $ "The given term evaluated a total of " ++ (show $ fst ast') ++ " times: "
-          setSGR [Reset]
-          printTerm $ snd ast'
-          return $ snd ast'
+  ast' <-
+    if isVal ast
+      then do
+        putStrLn "The given term is already a value"
+        return ast
+      else do
+        let ast' = eval' ast
+            errs = findTermErrors' $ snd ast'
+        if errs /= []
+          then do
+            putStrLn errs
+            setSGR [SetColor Foreground Vivid Red]
+            putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+            setSGR [Reset]
+            return $ TermNode noPos $ TmError ""
+          else do
+            setSGR [SetColor Foreground Vivid Green]
+            putStrLn $ "The given term evaluated a total of " ++ (show $ fst ast') ++ " times: "
+            setSGR [Reset]
+            printTerm $ snd ast'
+            return $ snd ast'
   return $ ast'
 
 printEvalN :: Counter -> TermNode -> IO TermNode
