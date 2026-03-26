@@ -15,11 +15,9 @@ type NameContext = [Name]
 type BindingContext = [Binding]
 
 data Binding
-  = TyVarBind Name
-  | TyVarExistsBind Name
-  | TmVarBind Name Type
-  | ConstraintBind Name Type
-  | MarkerBind Name
+  = TyVarBind {getName :: Name}
+  | TmVarBind {getName :: Name, getType :: Type}
+  | TmVarNoBind {getName :: Name}
   deriving (Eq, Show)
 
 data TermNode = TermNode
@@ -28,40 +26,27 @@ data TermNode = TermNode
   }
   deriving (Eq, Show)
 
-data AppliedFunction = AppliedFunction Type TermNode
-
 data Term
   = TmVarRaw Name
   | TmVar Index Index Name
-  | TmAbs Name TermNode
-  | TmApp TermNode TermNode
-  | TmUnit
-  | TmAnno TermNode Type
+  | TmAbs [Binding] [Binding] TermNode
+  | TmApp TermNode [Type] [TermNode]
+  | TmAppInfer TermNode [TermNode]
   | TmError String
   deriving (Eq, Show)
 
 data Type
-  = TyUnit
-  | TyArrow Type Type
-  | TyError String
-  | TyVar Index Index Name
-  | TyForAll Name Type
-  | TyVarExists Name
+  = TyForAll [Binding] [Type] Type
   | TyVarRaw Name
+  | TyVar Index Index Name
+  | TyBot
+  | TyTop
+  | TyError String
   deriving (Eq, Show)
 
 fromMaybe :: Maybe a -> a
 fromMaybe (Just x) = x
 fromMaybe Nothing  = error "fromMaybe, in Syntax.hs"
-
-fromTyVarBind :: Binding -> Name
-fromTyVarBind (TyVarBind x) = x
-
-fromTmVarBind :: Binding -> (Name, Type)
-fromTmVarBind (TmVarBind name ty) = (name, ty)
-
-fromConstraintBind :: Binding -> (Name, Type)
-fromConstraintBind (ConstraintBind x ty1) = (x, ty1)
 
 noPos :: FileInfo
 noPos = AlexPn (-1) (-1) (-1)

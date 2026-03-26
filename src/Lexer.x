@@ -7,21 +7,26 @@ module Lexer where
 $white = [\ \t\n\r\b]
 $digit = [0-9]
 $lower = [a-z]
+$upper = [A-Z]
 $alpha = [a-zA-Z]
 
 tokens :-
 
-$white+  ;
-"."            { \pos _ -> Token pos DOT }
-":"            { \pos _ -> Token pos COLON }
-"("            { \pos _ -> Token pos LPAREN }
-")"            { \pos _ -> Token pos RPAREN }
-(\\)|"λ"       { \pos _ -> Token pos LAMBDA }
-All|forall|"∀" { \pos _ -> Token pos FORALL }
-"->"|"→"       { \pos _ -> Token pos ARROW }
-unit           { \pos _ -> Token pos TYUNIT }
-$alpha+((\')*) { \pos s -> Token pos $ ID s }
-.              { \pos s -> Token pos $ ERROR ("Lexing error: " ++ s) }
+$white+              ;
+fun                  { \pos _ -> Token pos FUN }
+Bot                  { \pos _ -> Token pos BOT }
+Top                  { \pos _ -> Token pos TOP }
+","                  { \pos _ -> Token pos COMMA }
+":"                  { \pos _ -> Token pos COLON }
+"("                  { \pos _ -> Token pos LPAREN }
+")"                  { \pos _ -> Token pos RPAREN }
+"["                  { \pos _ -> Token pos LBRACK }
+"]"                  { \pos _ -> Token pos RBRACK }
+All                  { \pos _ -> Token pos FORALL }
+"->"                 { \pos _ -> Token pos ARROW }
+($lower+)(\')*       { \pos s -> Token pos $ IDLower s }
+($upper$lower*)(\')* { \pos s -> Token pos $ IDUpper s }
+.                    { \pos s -> Token pos $ ERROR ("Lexing error: " ++ s) }
 
 {
 data Token = Token
@@ -31,15 +36,19 @@ data Token = Token
   deriving (Eq, Show)
 
 data TokenData
-  = DOT
+  = FUN
+  | COMMA
   | COLON
   | LPAREN
   | RPAREN
-  | LAMBDA
+  | LBRACK
+  | RBRACK
   | FORALL
   | ARROW
-  | TYUNIT
-  | ID String
+  | TOP
+  | BOT
+  | IDLower String
+  | IDUpper String
   | ERROR String
   deriving (Eq, Show)
 }

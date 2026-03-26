@@ -1,5 +1,6 @@
 module Display where
 
+import           Data.List
 import           Lexer
 import           Syntax
 
@@ -18,16 +19,27 @@ showTerm ctx t =
            in if l == ctxLength
                 then getNameFromContext ctx k x
                 else tmVarErr l ctxLength
-        TmAbs x t1 ->
-          let x' = fixName' x
-           in "(" ++ "λ" ++ x' ++ "." ++ showTerm (x' : ctx) t1 ++ ")"
-        TmApp t1 t2 -> "(" ++ showTerm' t1 ++ " " ++ showTerm' t2 ++ ")"
-        TmUnit -> "()"
-        TmAnno t1 ty -> "(" ++ showTerm' t1 ++ " : " ++ showType' ty ++ ")"
+        TmAbs tyXs tmXs t1 ->
+          let tyXs' = "[" ++ (intercalate ", " $ map (fixName') $ map getName tyXs) ++ "]"
+              ctx' = map getName tmXs ++ map getName tyXs ++ ctx
+              tmXs' = "(" ++ (intercalate ", " $ map (showAnno ctx') tmXs) ++ ")"
+           in "(" ++ "fun" ++ tyXs' ++ tmXs' ++ showTerm ctx' t1 ++ ")"
+        TmApp t1 tys ts ->
+          let tys' = "[" ++ (intercalate ", " $ map (showType ctx) tys) ++ "]"
+              ts' = "(" ++ (intercalate ", " $ map (showTerm ctx) ts) ++ ")"
+           in "(" ++ showTerm' t1 ++ tys' ++ ts' ++ ")"
+        TmAppInfer t1 ts ->
+          let ts' = "(" ++ (intercalate ", " $ map (showTerm ctx) ts) ++ ")"
+           in "(" ++ showTerm' t1 ++ ts' ++ ")"
   where
     showTerm' = showTerm ctx
     fixName' = fixName ctx
     tmVarErr l ctxLength = "#TmVar: bad context length: " ++ show l ++ "/=" ++ show ctxLength ++ "#"
+    showAnno ctx' b =
+      case b of
+        TmVarBind x ty -> fixName' x ++ " : " ++ showType ctx' ty
+        TmVarNoBind x -> fixName' x
+        _ -> "#showAnno: got a TyVarBind binding in an annotation, which is meant to be unacheavable#"
 
 showType' :: Type -> String
 showType' ty = removeOuterParens $ showType [] ty
@@ -36,12 +48,13 @@ showType :: NameContext -> Type -> String
 showType ctx ty =
   let showType' = showType ctx
    in case ty of
-        TyUnit -> "unit"
-        TyArrow ty1 ty2 -> "(" ++ showType' ty1 ++ " → " ++ showType' ty2 ++ ")"
-        TyForAll x ty1 ->
-          let x' = fixName ctx x
-           in "(" ++ "∀" ++ x' ++ "." ++ showType (x' : ctx) ty1 ++ ")"
-        TyVarExists x -> x
+        TyTop -> "Top"
+        TyBot -> "Bot"
+        TyForAll tyXs tys ty1 ->
+          let tyXs' = "(" ++ (intercalate ", " $ map (fixName ctx) $ map getName tyXs) ++ ")"
+              ctx' = map getName tyXs ++ ctx
+              tys' = "(" ++ (intercalate ", " $ map (removeOuterParens . showType ctx') tys) ++ ")"
+           in "(" ++ "All" ++ tyXs' ++ tys' ++ " -> " ++ showType ctx' ty1 ++ ")"
         TyError e -> e
         TyVar k l x ->
           let ctxLength = length ctx
