@@ -20,7 +20,7 @@ $white+  ;
 All|forall|"∀" { \pos _ -> Token pos FORALL }
 "->"|"→"       { \pos _ -> Token pos ARROW }
 unit           { \pos _ -> Token pos TYUNIT }
-$alpha+("\'"*) { \pos s -> Token pos $ ID s }
+$alpha+((\')*) { \pos s -> Token pos $ ID s }
 .              { \pos s -> Token pos $ ERROR ("Lexing error: " ++ s) }
 
 {
