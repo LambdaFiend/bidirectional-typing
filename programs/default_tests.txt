@@ -1,113 +1,33 @@
-Impredicative1Fail := \x.(x : forall z . z -> z)
+SyntaxExampleFun1 := fun[X](x)x
 
-Impredicative2Fail := λx.(x : All z . z)
+SyntaxExampleFun2 := fun[](x)x
 
-Impredicative3Fail := λf.λx.f (x : ∀ z . z -> z -> z)
+SyntaxExampleFun3 := fun[X]()x
 
-Test1Anno := (\x.\y.y () ((\x.\y.x) x y)) : (forall z . z -> (unit -> z -> z) -> z)
+SyntaxExampleFun5 := fun[](x : Top)x
 
-ListConsAnno := (\s.\t.\x.\y.y s (t x y)) : forall U . forall X . U -> (X -> (U -> X -> X) -> X) -> X -> (U -> X -> X) -> X
+SyntaxExampleFun6 := fun[X](x : X)x
 
-ListNilAnno := (\x.\y.x) : forall U . forall X . X -> (U -> X -> X) -> X
+SyntaxExampleFun7 := fun[](x : All(X)(X, Bot)->Top)x
 
-ListHeadAnno := (\x.\y.x) : forall U . forall X . X -> (X -> (U -> X -> X) -> X) -> X
+SyntaxExampleFun8 := fun[](x : All(X, Y)(X, Y)->Top)x[Bot, Bot](y, z)
 
-ZeroAnno := (\f.\x.x) : forall X . (X -> X) -> X -> X
+SyntaxExampleAppInfer1 := x(y)
 
-SuccAnno := (\n.\f.\x.f (n f x)) : forall X . ((X -> X) -> X -> X) -> (X -> X) -> X -> X
+SyntaxExampleAppInfer2 := x(y, z)
 
-TwoPlusZeroAnno := ((\n.\m.\f.\x.n f (m f x)) (\f.\x.f (x)) (\f.\x.x)) : forall X . (X -> X) -> X -> X
+SyntaxExampleAppInfer3 := (fun[X]()x)()
 
-PlusAnno := (\n.\m.\f.\x.n f (m f x)) : forall X . ((X -> X) -> X -> X) -> ((X -> X) -> X -> X) -> (X -> X) -> X -> X
+SyntaxExampleApp1 := x[](y)
 
-BinTreeCoupleAnno := (\u.\v.\x.\y.y (u x y) (v x y)) : forall X . (X -> (X -> X -> X) -> X) -> (X -> (X -> X -> X) -> X) -> X -> (X -> X -> X) -> X
+SyntaxExampleApp2 := x[X]()
 
-BinTreeNilAnno := (\x.\y.x) : forall X . X -> (X -> X -> X) -> X
+SyntaxExampleApp3 := x[X](x)
 
-Test1 := (\x.\y.y () ((\x.\y.x) x y))
+SyntaxExampleVar1 := x
 
-ListCons := (\s.\t.\x.\y.y s (t x y)) 
+SyntaxExampleGeneral1 := (fun[X](x:All(Z,Z')(Z)->Z', y:Top)x (y))[Bot](x, y)
 
-ListNil := (\x.\y.x)
+SyntaxExampleGeneral2 := (fun[X](x:X)x)(x)
 
-ListHeadAnno := (\x.\y.x)
-
-Zero := (\f.\x.x)
-
-Succ := (\n.\f.\x.f (n f x))
-
-TwoPlusZero := (\n.\m.\f.\x.n f (m f x)) (\f.\x.f (x)) (\f.\x.x)
-
-Plus := \n.\m.\f.\x.n f (m f x)
-
-BinTreeCouple := (\u.\v.\x.\y.y (u x y) (v x y))
-
-BinTreeNil := (\x.\y.x)
-
-AnnoExample1 := \x.(x : unit)
-
-AnnoExample2 := \f.\g.\x.(f x) (g (x : unit -> unit))
-
-AnnoExample2' := \f.\g.\x.(f (x : unit -> unit)) (g (x : unit -> unit))
-
-AnnoExample2Fail := \f.\g.\x.(f (x : unit)) (g (x : unit -> unit))
-
-LongExample1 := \a.\b.\c.\d.\e.\f.\g.\h.\i.\j.\k.\l.\m.\n.\o.\p.\q.\r.\s.\t.\u.\v.\w.\x.\y.\z.a b c d e f g h i j k l m n o p q r s t u v w x y z
-
-LongExample2 := \a.\b.\c.\d.\e.\f.\g.\h.\i.\j.\k.\l.\m.\n.\o.\p.\q.\r.\s.\t.\u.\v.\w.\x.\y.\z.(a b) (c d) (e f) (g h) (i j) (k l) (m n) (o p) (q r) (s t) (u v) (w x) (y z)
-
-SmallOmegaFail := \x.x x
-
-YCombFail := \f.(\x.f(x x))(\x.f(x x))
-
-GenericExample1 := ()
-
-GenericExample1' := () : unit
-
-GenericExample1Fail := () : forall X . X
-
-GenericExample1Fail' := () : unit -> unit
-
-GenericExample2 := (\x.x) (\y.y)
-
-GenericExample2 := (\x.x) ((\y.y) : unit -> unit)
-
-GenericExample2' := (\x.x) : (unit -> unit) -> (unit -> unit) ((\y.y) : unit -> unit)
-
-GenericExample3 := (\x.\y.x) ()
-
-GenericExample4 := (\f.\x.x : unit) : forall X . X -> unit -> unit
-
-GenericExample4' := (\f.\x.(f : unit -> unit) (x : unit)) : (unit -> unit) -> unit -> unit
-
-GenericExample4Fail := (\f.\x.(f : unit -> unit) (x : unit)) : forall X . X -> unit -> unit
-
-GenericExample4Fail' := (\f.\x.f (x : unit)) : forall X . X -> unit -> unit
-
-GenericExample5 := (\y.\z.\x.x y y z) () (\f.\x.f x)
-
-GenericExample5Fail := (\x.\y.\z.x y y z) (\x.x) (\f.\x.f x) ()
-
-GenericExample6 := (\x.x) : forall X . X -> X
-
-GenericExample6' := (\x.x) : unit -> unit
-
-GenericExample6'' := (\x.x) : (unit -> unit) -> (unit -> unit)
-
-GenericExample6''' := (\x.x) : forall X . unit -> unit
-
-SComb := \x.\y.\z.(x z) (y z)
-
-KComb := \x.\y.x
-
-IComb := \x.x
-
-KStarComb := \x.\y.y
-
-SCombAnno := (\x.\y.\z.(x z) (y z)) : forall X . forall Y . forall Z . (Z -> Y -> X) -> (Z -> Y) -> Z -> X
-
-KCombAnno := (\x.\y.x) : forall X . forall Y . X -> Y -> X
-
-ICombAnno := (\x.x) : forall X . X -> X
-
-KStarCombAnno := (\x.\y.y) : forall X . forall Y . X -> Y -> Y
+SyntaxExampleGeneral3 := (fun[X]()x)[Top]()
