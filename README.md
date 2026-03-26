@@ -6,7 +6,7 @@
 
 Please refer to **Benjamin Pierce's** and **David Turner's** article: **Local Type Inference** \[2000\].
 
-This was made for a university project under the guidance of Professor Mário Florido.
+This was made for a university project under the guidance of **Professor Mário Florido**.
 
 ## Actually running LTIBDT
 
