@@ -10,6 +10,8 @@ showTerm' t =
     "()" -> showTerm [] t
     _    -> removeOuterParens $ showTerm [] t
 
+-- currently, much of the code needs to be abstracted better. I dirtied this so that I could quickly fix the issue of name instantiation colliding with same argument space name
+
 showTerm :: NameContext -> TermNode -> String
 showTerm ctx t =
   let tm = getTm t
@@ -20,10 +22,11 @@ showTerm ctx t =
                 then getNameFromContext ctx k x
                 else tmVarErr l ctxLength
         TmAbs tyXs tmXs t1 ->
-          let tyXs' = "[" ++ (intercalate ", " $ map (fixName') $ map getName tyXs) ++ "]"
-              ctx' = map getName tmXs ++ map getName tyXs ++ ctx
-              tmXs' = "(" ++ (intercalate ", " $ map (showAnno ctx') tmXs) ++ ")"
-           in "(" ++ "fun" ++ tyXs' ++ tmXs' ++ showTerm ctx' t1 ++ ")"
+          let tyXs' = "[" ++ (intercalate ", " $ map (\x -> fixName ((map getName tyXs \\ [x]) ++ ctx) x) $ map getName tyXs) ++ "]"
+              tmXs' = map (\x -> fixName ((map getName tmXs \\ [x]) ++ ctx) x) $ map getName tmXs
+              ctx' = map (\x -> fixName ((map getName tmXs \\ [x]) ++ ctx) x) (map getName tmXs) ++ map (\x -> fixName ((map getName tyXs \\ [x]) ++ ctx) x) (map getName tyXs) ++ ctx
+              tmXs'' = "(" ++ (intercalate ", " $ map (\(x, y) -> x ++ y) $ zip tmXs' $ map (showAnno ctx') tmXs) ++ ")"
+           in "(" ++ "fun" ++ tyXs' ++ tmXs'' ++ showTerm ctx' t1 ++ ")"
         TmApp t1 tys ts ->
           let tys' = "[" ++ (intercalate ", " $ map (showType ctx) tys) ++ "]"
               ts' = "(" ++ (intercalate ", " $ map (showTerm ctx) ts) ++ ")"
@@ -37,8 +40,8 @@ showTerm ctx t =
     tmVarErr l ctxLength = "#TmVar: bad context length: " ++ show l ++ "/=" ++ show ctxLength ++ "#"
     showAnno ctx' b =
       case b of
-        TmVarBind x ty -> fixName' x ++ " : " ++ showType ctx' ty
-        TmVarNoBind x -> fixName' x
+        TmVarBind x ty -> " : " ++ showType ctx' ty
+        TmVarNoBind x -> ""
         _ -> "#showAnno: got a TyVarBind binding in an annotation, which is meant to be unacheavable#"
 
 showType' :: Type -> String
@@ -51,8 +54,8 @@ showType ctx ty =
         TyTop -> "Top"
         TyBot -> "Bot"
         TyForAll tyXs tys ty1 ->
-          let tyXs' = "(" ++ (intercalate ", " $ map (fixName ctx) $ map getName tyXs) ++ ")"
-              ctx' = map getName tyXs ++ ctx
+          let tyXs' = "(" ++ (intercalate ", " $ map (\x -> fixName ((map getName tyXs \\ [x]) ++ ctx) x) $ map getName tyXs) ++ ")"
+              ctx' = map (\x -> fixName ((map getName tyXs \\ [x]) ++ ctx) x) (map getName tyXs) ++ ctx
               tys' = "(" ++ (intercalate ", " $ map (removeOuterParens . showType ctx') tys) ++ ")"
            in "(" ++ "All" ++ tyXs' ++ tys' ++ " -> " ++ showType ctx' ty1 ++ ")"
         TyError e -> e

@@ -47,7 +47,7 @@ tyShift c d t =
     TyForAll tyXs tys ty1 ->
       let tyShift'' = tyShift (c + length tyXs) d
        in TyForAll tyXs (map tyShift'' tys) $ tyShift'' ty1
-    TyError _ -> t
+    _ -> t
   where
     -- _ -> TyError $ "Helper, tyShift: type is not applicable: " ++ show t
     tyShift' = tyShift c d
@@ -62,8 +62,7 @@ tySubst c j s t =
     TyForAll tyXs tys ty1 ->
       let tySubst'' = tySubst (c + length tyXs) j s
        in TyForAll tyXs (map tySubst'' tys) $ tySubst'' ty1
-    TyError e -> TyError e
-    _ -> TyError $ "Helper, tySubst: type is not applicable; " ++ show t
+    _ -> t
   where
     tySubst' = tySubst c j s
 
