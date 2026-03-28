@@ -114,9 +114,3 @@ fixBindingNames :: NameContext -> [Binding] -> [Name]
 fixBindingNames ctx xs =
   let xs' = getNames xs
    in map (\x -> fixName ((xs' \\ [x]) ++ ctx) x) xs'
-
-getOtherArgs :: [Binding] -> Name -> [Name]
-getOtherArgs bs x = getNames bs \\ [x]
-
-getNames :: [Binding] -> [Name]
-getNames = map getName

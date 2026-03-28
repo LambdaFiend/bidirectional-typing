@@ -1,7 +1,6 @@
 module Typing where
 
 import           Data.List
-import           Debug.Trace
 import           Display
 import           Helper
 import           Syntax
@@ -9,23 +8,33 @@ import           Syntax
 synth' :: TermNode -> Type
 synth' t = synth [] t
 
--- disgrace! I should have planned how I would handle the scoping. the uncurried form terrorized me in ways I thought I had imagined beforehand (in fact, I hadn't - it was far worse)
+-- What a disgrace! I should have planned how I would handle the scoping. The uncurried form terrorized me in ways unimaginable.
 
 synth :: BindingContext -> TermNode -> Type
 synth ctx t =
-  case tm of
+  case getTm t of
     TmVar k _ _ -> getTypeFromContext ctx k
-    TmAbs tyXs tmXs t1 -> tyShift (negate $ length tyXs) (negate $ length tmXs) $ TyForAll tyXs (map getType tmXs) (synth (tmXs ++ tyXs ++ map (applyToBindType $ tyShift' $ length (tyXs ++ tmXs)) ctx) t1)
+    TmAbs tyXs tmXs t1
+      | areAnnotated tmXs ->
+          let tyXsLen = length tyXs
+              tmXsLen = length tmXs
+              shiftDown = tyShift (-tyXsLen) (-tmXsLen)
+              shiftUp = tyShift 0 (tyXsLen + tmXsLen)
+              ctx' = map (applyToBindType shiftUp) ctx
+              ctx'' = tmXs ++ tyXs ++ ctx'
+           in shiftDown $ TyForAll tyXs (getTypes tmXs) (synth ctx'' t1)
     TmApp t1 tys ts ->
       case synth ctx t1 of
         TyForAll tyXs tys' ty1'
-          | length tys == length tyXs && length ts == length tys' ->
-              if and $ map (\(tm', ty') -> check ctx tm' ty') $ zip ts $ map (\ty -> foldr typingEvalSubst ty tys) tys'
-                then foldr typingEvalSubst ty1' $ map (\(x, k) -> tyShift' k x) $ zip (reverse tys) [0 ..]
-                else TyError "synth TmApp: failed to check"
+          | sameLength tys tyXs && sameLength ts tys' ->
+              let tysZipRange = zip (reverse tys) [0 ..]
+                  fixedIndexTys = map (\(x, k) -> tyShift' k x) tysZipRange
+                  tsZipSubstTys' = zip ts $ map (\ty -> foldr typingEvalSubst ty fixedIndexTys) tys'
+               in if and $ map (\(tm, ty) -> check ctx tm ty) tsZipSubstTys'
+                    then foldr typingEvalSubst ty1' fixedIndexTys
+                    else TyError "synth TmApp: failed to check"
         _ -> TyError "synth TmApp: not a function type or type arguments mismatch"
-  where
-    tm = getTm t
+    _ -> TyError "synth: not a valid term (maybe missing annotations?)"
 
 check :: BindingContext -> TermNode -> Type -> Bool
 check ctx t ty = True
