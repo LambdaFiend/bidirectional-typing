@@ -10,8 +10,6 @@ showTerm' t =
     "()" -> showTerm [] t
     _    -> removeOuterParens $ showTerm [] t
 
--- currently, much of the code needs to be abstracted better. I dirtied this so that I could quickly fix the issue of name instantiation colliding with same argument space name
-
 showTerm :: NameContext -> TermNode -> String
 showTerm ctx t =
   let tm = getTm t
@@ -22,60 +20,49 @@ showTerm ctx t =
                 then getNameFromContext ctx k x
                 else tmVarErr l ctxLength
         TmAbs tyXs tmXs t1 ->
-          let tyXs' = "[" ++ (intercalate ", " $ map (\x -> fixName ((map getName tyXs \\ [x]) ++ ctx) x) $ map getName tyXs) ++ "]"
-              tmXs' = map (\x -> fixName ((map getName tmXs \\ [x]) ++ ctx) x) $ map getName tmXs
-              ctx' = map (\x -> fixName ((map getName tmXs \\ [x]) ++ ctx) x) (map getName tmXs) ++ map (\x -> fixName ((map getName tyXs \\ [x]) ++ ctx) x) (map getName tyXs) ++ ctx
-              tmXs'' = "(" ++ (intercalate ", " $ map (\(x, y) -> x ++ y) $ zip tmXs' $ map (showAnno ctx') tmXs) ++ ")"
-           in "(" ++ "fun" ++ tyXs' ++ tmXs'' ++ showTerm ctx' t1 ++ ")"
+          let tyXs' = fixBindingNames' tyXs
+              tyXs'' = "[" ++ intercalate ", " tyXs' ++ "]"
+              tmXs' = fixBindingNames' tmXs
+              ctx' = tmXs' ++ tyXs' ++ ctx
+              argsZipAnnos = zip tmXs' (map (showAnno ctx') tmXs)
+              tmXs'' = "(" ++ intercalateArgs (\(x, y) -> x ++ y) argsZipAnnos ++ ")"
+           in "(" ++ "fun" ++ tyXs'' ++ tmXs'' ++ showTerm ctx' t1 ++ ")"
         TmApp t1 tys ts ->
-          let tys' = "[" ++ (intercalate ", " $ map (showType ctx) tys) ++ "]"
-              ts' = "(" ++ (intercalate ", " $ map (showTerm ctx) ts) ++ ")"
-           in "(" ++ showTerm' t1 ++ tys' ++ ts' ++ ")"
+          let tys' = "[" ++ intercalateArgs (showType ctx) tys ++ "]"
+              ts' = "(" ++ intercalateArgs (showTerm ctx) ts ++ ")"
+           in "(" ++ showTerm ctx t1 ++ tys' ++ ts' ++ ")"
         TmAppInfer t1 ts ->
-          let ts' = "(" ++ (intercalate ", " $ map (showTerm ctx) ts) ++ ")"
-           in "(" ++ showTerm' t1 ++ ts' ++ ")"
+          let ts' = "(" ++ intercalateArgs (showTerm ctx) ts ++ ")"
+           in "(" ++ showTerm ctx t1 ++ ts' ++ ")"
+        TmError e -> e
+        _ -> "#Bad term for display:\n" ++ show tm ++ "#"
   where
-    showTerm' = showTerm ctx
-    fixName' = fixName ctx
     tmVarErr l ctxLength = "#TmVar: bad context length: " ++ show l ++ "/=" ++ show ctxLength ++ "#"
-    showAnno ctx' b =
-      case b of
-        TmVarBind x ty -> " : " ++ showType ctx' ty
-        TmVarNoBind x -> ""
-        _ -> "#showAnno: got a TyVarBind binding in an annotation, which is meant to be unacheavable#"
+    fixBindingNames' = fixBindingNames ctx
 
 showType' :: Type -> String
 showType' ty = removeOuterParens $ showType [] ty
 
 showType :: NameContext -> Type -> String
 showType ctx ty =
-  let showType' = showType ctx
-   in case ty of
-        TyTop -> "Top"
-        TyBot -> "Bot"
-        TyForAll tyXs tys ty1 ->
-          let tyXs' = "(" ++ (intercalate ", " $ map (\x -> fixName ((map getName tyXs \\ [x]) ++ ctx) x) $ map getName tyXs) ++ ")"
-              ctx' = map (\x -> fixName ((map getName tyXs \\ [x]) ++ ctx) x) (map getName tyXs) ++ ctx
-              tys' = "(" ++ (intercalate ", " $ map (removeOuterParens . showType ctx') tys) ++ ")"
-           in "(" ++ "All" ++ tyXs' ++ tys' ++ " -> " ++ showType ctx' ty1 ++ ")"
-        TyError e -> e
-        TyVar k l x ->
-          let ctxLength = length ctx
-           in if l == ctxLength
-                then getNameFromContext ctx k x
-                else tyVarErr l ctxLength
+  case ty of
+    TyTop -> "Top"
+    TyBot -> "Bot"
+    TyForAll tyXs tys ty1 ->
+      let tyXs' = fixBindingNames ctx tyXs
+          tyXs'' = "(" ++ intercalate ", " tyXs' ++ ")"
+          ctx' = tyXs' ++ ctx
+          tys' = "(" ++ intercalateArgs (removeOuterParens . showType ctx') tys ++ ")"
+       in "(" ++ "All" ++ tyXs'' ++ tys' ++ " -> " ++ showType ctx' ty1 ++ ")"
+    TyError e -> e
+    TyVar k l x ->
+      let ctxLength = length ctx
+       in if l == ctxLength
+            then getNameFromContext ctx k x
+            else tyVarErr l ctxLength
+    _ -> "#Bad type for display:\n" ++ show ty ++ "#"
   where
     tyVarErr l ctxLength = "#TyVar: bad context length: " ++ show l ++ "/=" ++ show ctxLength ++ "#"
-
-getNameFromContext :: NameContext -> Index -> Name -> Name
-getNameFromContext ctx ind x
-  | ind >= 0 && ind < length ctx = ctx !! ind
-  | otherwise = x -- "#TmVar: no name context for var#"
-
-fixName :: NameContext -> Name -> Name
-fixName ctx x
-  | (length $ filter ((==) x) ctx) < 1 = x
-  | otherwise = fixName ctx (x ++ "\'")
 
 showFileInfo :: FileInfo -> String
 showFileInfo (AlexPn p l c) =
@@ -89,6 +76,8 @@ showFileInfo (AlexPn p l c) =
     ++ "Column: "
     ++ show c
 
+-- Display helper functions below this line
+
 removeOuterParens :: String -> String
 removeOuterParens xs
   | length xs >= 2 =
@@ -100,3 +89,34 @@ removeOuterParens xs
   where
     getHead = (\ws -> case ws of (y : _) -> y; _ -> '\0')
     getTail = (\ws -> case ws of (_ : ys) -> ys; _ -> [])
+
+fixName :: NameContext -> Name -> Name
+fixName ctx x
+  | (length $ filter ((==) x) ctx) < 1 = x
+  | otherwise = fixName ctx (x ++ "\'")
+
+getNameFromContext :: NameContext -> Index -> Name -> Name
+getNameFromContext ctx ind x
+  | ind >= 0 && ind < length ctx = ctx !! ind
+  | otherwise = x -- "#TmVar: no name context for var#"
+
+showAnno :: NameContext -> Binding -> String
+showAnno ctx b =
+  case b of
+    TmVarBind _ ty -> " : " ++ showType ctx ty
+    TmVarNoBind _ -> ""
+    _ -> "#showAnno: got a TyVarBind binding in an annotation, which is meant to be unacheavable#"
+
+intercalateArgs :: (a -> String) -> [a] -> String
+intercalateArgs f xs = intercalate ", " $ map f xs
+
+fixBindingNames :: NameContext -> [Binding] -> [Name]
+fixBindingNames ctx xs =
+  let xs' = getNames xs
+   in map (\x -> fixName ((xs' \\ [x]) ++ ctx) x) xs'
+
+getOtherArgs :: [Binding] -> Name -> [Name]
+getOtherArgs bs x = getNames bs \\ [x]
+
+getNames :: [Binding] -> [Name]
+getNames = map getName
