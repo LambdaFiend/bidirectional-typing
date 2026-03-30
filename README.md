@@ -81,7 +81,7 @@ In contrast to YALCI's REPL, this one does not include desugaring, as it would h
 
 This section will be expanded in the near future.
 
-LTIBDT can now type! I'm likely going to add evaluation as well, let-bindings and some base types. Well, I might *only* add let-bindings.
+LTIBDT can now type! I've also added let-bindings. I'm likely not going to add base types, considering that it wouldn't be fruitful enough, from my perspective. I'm still deciding between adding evaluation and not adding evaluation. Probably not, I would say. This means that the implementation is mostly completed, besides the casual bugs.
 
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
