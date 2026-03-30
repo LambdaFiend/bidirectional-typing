@@ -124,18 +124,6 @@ subtype ty1 ty2 =
            in cond1 && cond2
     _ -> False
 
-getFreeTyVars' :: Type -> [Binding]
-getFreeTyVars' ty = getFreeTyVars 0 ty
-
-getFreeTyVars :: Index -> Type -> [Binding]
-getFreeTyVars n ty =
-  case ty of
-    TyVar k _ x | k >= n -> [TyVarBind x]
-    TyForAll tyXs tys ty1 ->
-      let n' = n + length tyXs
-       in concat (map (getFreeTyVars n') tys) ++ getFreeTyVars n' ty1
-    _ -> []
-
 constraintGen :: [Binding] -> [Binding] -> Type -> Type -> ConstraintList
 constraintGen vars unks ty1 ty2 =
   case (ty1, ty2) of
@@ -159,7 +147,7 @@ constraintGen vars unks ty1 ty2 =
            in union (foldr (meetConstraintLists) d cs) [Constraint TyBot x TyTop | x <- unks]
     _ -> []
   where
-    union' = unionBy (\(Constraint _ (TyVarBind x) _) (Constraint _ (TyVarBind y) _) -> x == y)
+    union' = unionBy (\(Constraint _ x _) (Constraint _ y _) -> getName x == getName y)
 
 calculateSubst :: ConstraintList -> Type -> [(Binding, Type)]
 calculateSubst cs r =

@@ -114,3 +114,15 @@ getInfoFromContext ctx ind
 
 zipBindings :: [Binding] -> BindingContext
 zipBindings bs = let bLen = length bs in zip bs [bLen, bLen - 1, 1]
+
+getFreeTyVars' :: Type -> [Binding]
+getFreeTyVars' ty = getFreeTyVars 0 ty
+
+getFreeTyVars :: Index -> Type -> [Binding]
+getFreeTyVars n ty =
+  case ty of
+    TyVar k _ x | k >= n -> [TyVarBind x]
+    TyForAll tyXs tys ty1 ->
+      let n' = n + length tyXs
+       in concat (map (getFreeTyVars n') tys) ++ getFreeTyVars n' ty1
+    _ -> []

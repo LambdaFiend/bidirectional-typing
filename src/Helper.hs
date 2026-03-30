@@ -101,8 +101,8 @@ genIndex ctx t =
         case tm of
           TmVarRaw x -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
           TmAbs tyXs tmXs _ ->
-            let ctx' = map getName tyXs ++ ctx
-                ctx'' = map getName tmXs ++ ctx'
+            let ctx' = getNames tyXs ++ ctx
+                ctx'' = getNames tmXs ++ ctx'
              in (t, genIndex ctx'', genIndex', genIndexType ctx')
           _ -> (t, genIndex', genIndex', genIndexType ctx)
   where
@@ -191,6 +191,22 @@ findConflicts t =
                 then findConflictsType ty1
                 else "#Conflicting variable names:\n" ++ show b ++ "#" ++ concat (map findConflictsType tys) ++ findConflictsType ty1
         _ -> ""
+
+getFreeVars' :: TermNode -> [Binding]
+getFreeVars' t = getFreeVars 0 t
+
+getFreeVars :: Index -> TermNode -> [Binding]
+getFreeVars n t =
+  case getTm t of
+    TmVarRaw x -> [TmVarNoBind x]
+    TmVar k _ x -> if k < n then [] else [TmVarNoBind x]
+    TmAbs tyXs tmXs t1 ->
+      let n' = length tyXs + n
+          n'' = length tmXs + n'
+       in concat (map (getFreeTyVars n') (getTypes tmXs)) ++ getFreeVars n'' t1
+    TmApp t1 tys ts -> getFreeVars n t1 ++ concat (map (getFreeTyVars n) tys) ++ concat (map (getFreeVars n) ts)
+    TmAppInfer t1 ts -> getFreeVars n t1 ++ concat (map (getFreeVars n) ts)
+    _ -> []
 
 id' :: TermNode -> UpdatedTmArrTm
 id' t = UpdatedTmArrTm (t, id', id', id :: Type -> Type)
