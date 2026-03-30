@@ -31,3 +31,44 @@ SyntaxExampleGeneral1 := (fun[X](x:All(Z,Z')(Z)->Z', y:Top)x (y))[Bot](x, y)
 SyntaxExampleGeneral2 := (fun[X](x:X)x)(x)
 
 SyntaxExampleGeneral3 := (fun[X]()x)[Top]()
+
+NewExample1 := fun[](x:All(X,X')()->(All(X)(X)->X'))x
+
+NewExample2 := fun[X](y:X, x:All(Y)(Y)->Top)x[X](y)
+
+NewExample3 := (fun[X,Y](x:X, y:Y, f:All(Z,K)(Z,X)->K)f[Top,Bot](x,x))
+
+NewExample4 := fun[](b:Bot)(fun[](a:Bot)a)[]((fun[A](c:Bot)c)[Bot](b))
+
+NewExample5 := fun[](b:Bot)(fun[](a:Bot)a)[]((fun[A](c:Bot)c)[Top](b))
+
+NewExample6 := fun[](b:Bot)(fun[](a:Bot)a)[]((fun[A](c:Bot)c)(b))
+
+NewExample7 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot,Top](l,k,fun[A](a:A, b:Top)b)
+
+newExample8 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)(k,l,fun[A](a:A, b:Top)b)
+
+newExample9 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot, Top](k,l,fun[A](a:A, b:Top)b)
+
+newExample10 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top, Top](k,l,fun[A](a:A, b:Top)b)
+
+newExample11 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top, Bot](k,l,fun[A](a:A, b:Top)b)
+
+newExample12 := (fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f[X](x,x))
+
+newExample13 := (fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f(x,x))
+
+newExample14 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot,Bot](l,k,fun[A](a:A, b:Bot)b)
+
+newExample15 := fun[](k : Bot, l : Bot)((fun[X, Y](x : X, y : Y, f : (All(Z)(Z, X) -> Bot))f)[Bot, Bot](k, l, (fun[A](a : A, b : Bot)b)))
+
+newExample16 := fun[](k : Top, l : Bot)((fun[X, Y](x : X, y : Y, f : (All(Z)(Z, X) -> Bot))f)[Bot, Bot](k, l, (fun[A](a : A, b : Bot)b)))
+
+newExample17 := fun[](k:Top,l:Top)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Bot)b)
+
+newExample18 := fun[](k:Top,l:Top)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Top)b)
+
+newExample19 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Top)b)
+
+newExample20 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot,Bot](k,l,fun[A](a:A, b:Top)b)
+
