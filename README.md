@@ -82,7 +82,7 @@ In contrast to YALCI's REPL, this one does not include desugaring, as it would h
 
 ## Some insights
 
-At the moment LTIBDT can only parse and print expressions back, so it's rather limited.
+This section will be expanded in the near future. LTIBDT can now type! I'm likely going to add evaluation as well, let-bindings and some base types. Well, I might *only* add let-bindings.
 
 I would like to refactor the code in a way it enforces the bindings in function declarations to be distinct, without validation alone.
 
