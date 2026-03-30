@@ -46,29 +46,38 @@ NewExample6 := fun[](b:Bot)(fun[](a:Bot)a)[]((fun[A](c:Bot)c)(b))
 
 NewExample7 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot,Top](l,k,fun[A](a:A, b:Top)b)
 
-newExample8 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)(k,l,fun[A](a:A, b:Top)b)
+NewExample8 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)(k,l,fun[A](a:A, b:Top)b)
 
-newExample9 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot, Top](k,l,fun[A](a:A, b:Top)b)
+NewExample9 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot, Top](k,l,fun[A](a:A, b:Top)b)
 
-newExample10 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top, Top](k,l,fun[A](a:A, b:Top)b)
+NewExample10 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top, Top](k,l,fun[A](a:A, b:Top)b)
 
-newExample11 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top, Bot](k,l,fun[A](a:A, b:Top)b)
+NewExample11 := fun[](k:Top,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top, Bot](k,l,fun[A](a:A, b:Top)b)
 
-newExample12 := (fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f[X](x,x))
+NewExample12 := (fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f[X](x,x))
 
-newExample13 := (fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f(x,x))
+NewExample13 := (fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f(x,x))
 
-newExample14 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot,Bot](l,k,fun[A](a:A, b:Bot)b)
+NewExample14 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot,Bot](l,k,fun[A](a:A, b:Bot)b)
 
-newExample15 := fun[](k : Bot, l : Bot)((fun[X, Y](x : X, y : Y, f : (All(Z)(Z, X) -> Bot))f)[Bot, Bot](k, l, (fun[A](a : A, b : Bot)b)))
+NewExample15 := fun[](k : Bot, l : Bot)((fun[X, Y](x : X, y : Y, f : (All(Z)(Z, X) -> Bot))f)[Bot, Bot](k, l, (fun[A](a : A, b : Bot)b)))
 
-newExample16 := fun[](k : Top, l : Bot)((fun[X, Y](x : X, y : Y, f : (All(Z)(Z, X) -> Bot))f)[Bot, Bot](k, l, (fun[A](a : A, b : Bot)b)))
+NewExample16 := fun[](k : Top, l : Bot)((fun[X, Y](x : X, y : Y, f : (All(Z)(Z, X) -> Bot))f)[Bot, Bot](k, l, (fun[A](a : A, b : Bot)b)))
 
-newExample17 := fun[](k:Top,l:Top)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Bot)b)
+NewExample17 := fun[](k:Top,l:Top)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Bot)b)
 
-newExample18 := fun[](k:Top,l:Top)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Top)b)
+NewExample18 := fun[](k:Top,l:Top)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Top)b)
 
-newExample19 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Top)b)
+NewExample19 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Top,Top](k,l,fun[A](a:A, b:Top)b)
 
-newExample20 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot,Bot](k,l,fun[A](a:A, b:Top)b)
+NewExample20 := fun[](k:Bot,l:Bot)(fun[X,Y](x:X, y:Y, f:All(Z)(Z,X)->Top)f)[Bot,Bot](k,l,fun[A](a:A, b:Top)b)
 
+plus3and1let :=
+  let number3 = fun[Int](f:All()(Int)->Int, x:Int)f(f(f(x))) in
+  let plus1 = fun[Int](n: All(Int)(All()(Int)->Int, Int)->Int, f:All()(Int)->Int, x:Int)f(n(f,x)) in 
+    fun[Int](f:All()(Int)->Int, x:Int)plus1(number3, f, x)
+
+plus3and1normal :=
+  fun[Int](f:All()(Int)->Int, x:Int)(fun[Int](n: All(Int)(All()(Int)->Int, Int)->Int, f:All()(Int)->Int, x:Int)f(n(f,x)))(fun[Int](f:All()(Int)->Int, x:Int)f(f(f(x))), f, x)
+
+number3 := fun[Int](f:All()(Int)->Int, x:Int)f(f(f(x)))
