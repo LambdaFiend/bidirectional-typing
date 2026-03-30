@@ -103,19 +103,6 @@ main' env comml = do
       setSGR [Reset]
       putStrLn $ " type errors " ++ "on page " ++ k
       return env
-    [eenv, k] | and (map isDigit k) && elem eenv [":ee", ":eenv", ":evalenv"] -> do
-      let k' = read k
-          env' = drop ((k' - 1) * 10) $ take (k' * 10) env
-      errs <- evalEnvironment env'
-      if errs /= [] then putStrLn "" else return ()
-      putStrLn $ intercalate "\n" errs
-      if errs /= [] then putStrLn "" else return ()
-      putStr $ "There was a total of "
-      setSGR [SetColor Foreground Vivid Red]
-      putStr $ show (length errs)
-      setSGR [Reset]
-      putStrLn $ " evaluation errors " ++ "on page " ++ k
-      return env
     [senv, k] | and (map isDigit k) && elem senv [":showenv", ":showe", ":senv", ":se"] -> do
       let k' = read k
           env' = drop ((k' - 1) * 10) $ take (k' * 10) env
@@ -155,17 +142,6 @@ main' env comml = do
       putStr $ show (length errs)
       setSGR [Reset]
       putStrLn " type errors in the environment"
-      return env
-    [eenv] | elem eenv [":ee", ":eenv", ":evalenv"] -> do
-      errs <- evalEnvironment env
-      if errs /= [] then putStrLn "" else return ()
-      putStrLn $ intercalate "\n" errs
-      if errs /= [] then putStrLn "" else return ()
-      putStr $ "There was a total of "
-      setSGR [SetColor Foreground Vivid Red]
-      putStr $ show (length errs)
-      setSGR [Reset]
-      putStrLn " evaluation errors in the environment"
       return env
     [quit] | elem quit [":q", ":quit"] -> do
       setSGR [SetColor Foreground Vivid Yellow]
@@ -246,28 +222,6 @@ main' env comml = do
         else do
           printType $ fromMaybe x
           return env
-    [ev, name] | elem ev [":eval", ":ev", ":e"] -> do
-      let x = lookup name env
-      if x == Nothing
-        then do
-          setSGR [SetColor Foreground Vivid Red]
-          putStrLn "Variable not in scope"
-          setSGR [Reset]
-          return env
-        else do
-          printEval $ fromMaybe x
-          return env
-    [ev, k, name] | and (map isDigit k) && elem ev [":eval", ":ev", ":e"] -> do
-      let x = lookup name env
-      if x == Nothing
-        then do
-          setSGR [SetColor Foreground Vivid Red]
-          putStrLn "Variable not in scope"
-          setSGR [Reset]
-          return env
-        else do
-          printEvalN (read k) $ fromMaybe x
-          return env
     [help] | elem help [":help", ":h", ":?"] -> do
       putStrLn getHelp
       return env
@@ -282,37 +236,6 @@ main' env comml = do
         else do
           printTerm $ fromMaybe x
           return env
-    [var, name1, ev, name2]
-      | elem var [":var", ":v", ":assign", ":a"]
-          && elem ev [":eval", ":ev", ":e"] -> do
-          let x = lookup name2 env
-          if x == Nothing
-            then do
-              setSGR [SetColor Foreground Vivid Red]
-              putStrLn "Variable not in scope"
-              setSGR [Reset]
-              return env
-            else do
-              let term = fromMaybe x
-              term' <- printEval term
-              let env' = deleteByFstEnv name1 env
-              return ((name1, term') : env')
-    [var, name1, ev, k, name2]
-      | and (map isDigit k)
-          && elem var [":var", ":v", ":assign", ":a"]
-          && elem ev [":eval", ":ev", ":e"] -> do
-          let x = lookup name2 env
-          if x == Nothing
-            then do
-              setSGR [SetColor Foreground Vivid Red]
-              putStrLn "Variable not in scope"
-              setSGR [Reset]
-              return env
-            else do
-              let term = fromMaybe x
-              term' <- printEvalN (read k) term
-              let env' = deleteByFstEnv name1 env
-              return ((name1, term') : env')
     ((':' : _) : _) -> do
       setSGR [SetColor Foreground Vivid Red]
       putStrLn "Unknown command"
@@ -333,10 +256,6 @@ main' env comml = do
           setSGR [Reset]
           printType term'
           putStrLn ""
-          setSGR [SetColor Foreground Vivid Yellow]
-          putStrLn "Evaluation:"
-          setSGR [Reset]
-          printEval term'
           return env
   if env' == [("", TermNode noPos (TmError "Quit."))]
     then return ()
