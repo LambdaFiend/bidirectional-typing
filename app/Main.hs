@@ -662,7 +662,24 @@ getTermFromAST txt = do
           putStrLn e
           setSGR [Reset]
           return $ Left ""
-        _ -> return $ Right $ fixTermNames' $ genIndex' ast'
+        _ ->
+          let ast'' = fixTermNames' $ genIndex' ast'
+              fvs = getFreeVars' ast''
+           in case fvs of
+                [] -> return $ Right ast''
+                (b : bs) -> do
+                  setSGR [SetColor Foreground Vivid Red]
+                  putStrLn "There are free variables in the given term:"
+                  putStrLn $ foldr (\x y -> y ++ "\n" ++ prettyPrintFVs x) (prettyPrintFVs b) (reverse bs)
+                  setSGR [Reset]
+                  return $ Left ""
+  where
+    prettyPrintFVs :: Binding -> String
+    prettyPrintFVs b =
+      case b of
+        TmVarNoBind x -> "Term variable " ++ x
+        TmVarBind x _ -> "Term variable? " ++ x
+        TyVarBind x   -> "Type variable " ++ x
 
 getMultipleASTsFromTerms :: [(String, String)] -> IO [(String, TermNode)]
 getMultipleASTsFromTerms [] = return []
