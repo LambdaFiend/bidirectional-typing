@@ -662,7 +662,7 @@ getTermFromAST txt = do
           putStrLn e
           setSGR [Reset]
           return $ Left ""
-        _ -> return $ Right $ genIndex' ast'
+        _ -> return $ Right $ fixTermNames' $ genIndex' ast'
 
 getMultipleASTsFromTerms :: [(String, String)] -> IO [(String, TermNode)]
 getMultipleASTsFromTerms [] = return []
