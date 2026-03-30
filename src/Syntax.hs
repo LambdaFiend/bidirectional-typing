@@ -46,6 +46,7 @@ data Term
   | TmAbs [Binding] [Binding] TermNode
   | TmApp TermNode [Type] [TermNode]
   | TmAppInfer TermNode [TermNode]
+  | TmLet Name TermNode TermNode
   | TmError String
   deriving (Eq, Show)
 
@@ -126,3 +127,15 @@ getFreeTyVars n ty =
       let n' = n + length tyXs
        in concat (map (getFreeTyVars n') tys) ++ getFreeTyVars n' ty1
     _ -> []
+
+-- This is sort of used experimentally. I'm afraid the constraint generation is flawed. In any case, it seems to be working, as far as I could see. This seems to make the algorithm respect the specification a little more.
+
+changeTypesNames :: [(Name, Name)] -> Type -> Type
+changeTypesNames m ty =
+  case ty of
+    TyForAll tyXs tys ty1 -> TyForAll tyXs (map (changeTypesNames m) tys) (changeTypesNames m ty1)
+    TyVar k l x ->
+      case lookup x m of
+        Just x' -> TyVar k l x'
+        Nothing -> TyVar k l x
+    _ -> ty

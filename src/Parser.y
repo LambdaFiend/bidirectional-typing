@@ -13,6 +13,9 @@ import Syntax
 %token
 
 fun     { Token pos FUN }
+let     { Token pos LET }
+in      { Token pos IN }
+"="     { Token pos ASSIGN }
 ","     { Token pos COMMA }
 ":"     { Token pos COLON }
 "("     { Token pos LPAREN }
@@ -31,6 +34,9 @@ idUpper { Token pos (IDUpper s) }
 Term
   : App { $1 }
   | Fun { $1 }
+  | Let { $1 }
+
+Let : let NameLower "=" Term in Term { TermNode (tokenPos $1) $ TmLet (snd $2) $4 $6 }
 
 App
   : App "[" TypeMany "]" "(" TermMany ")" { TermNode (getFI $1) $ TmApp $1 $3 $6 }

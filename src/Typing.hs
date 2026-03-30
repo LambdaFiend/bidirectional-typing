@@ -50,7 +50,7 @@ synth ctx t =
                       (d' : ds') -> foldr (meetConstraintLists) d' ds'
                       _          -> []
                   minimalSigma = calculateSubst c ty1
-                  cond = all ((not . isTyError) . snd) minimalSigma && tyXs == [x1 | x1 <- tyXs, (x2, _) <- minimalSigma, x1 == x2]
+                  cond = all ((not . isTyError) . snd) minimalSigma && tyXs == nub [x1 | x1 <- tyXs, (x2, _) <- minimalSigma, x1 == x2]
                   orderedSigma = [ty | (TyVarBind x1) <- tyXs, (TyVarBind x2, ty) <- minimalSigma, x1 == x2]
                   tysZipRange = zip (reverse orderedSigma) [0 ..]
                   fixedIndexTys = map (\(x, k) -> tyShift' k x) tysZipRange
@@ -59,6 +59,10 @@ synth ctx t =
                     else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
         TyForAll _ _ _ -> synth ctx (TermNode (getFI t) $ TmApp t1 [] ts)
         _ -> TyError "synth TmAppInfer _: not a valid function type"
+    TmLet x t1 t2 ->
+      let s = synth ctx t1
+          ctx' = (TmVarBind x s, 1) : ctx
+       in tyShift' (-1) $ synth ctx' t2
     _ -> TyError "synth _: not a valid term"
 
 check :: BindingContext -> TermNode -> Type -> Bool
@@ -107,6 +111,10 @@ check ctx t ty =
                in all (\(Constraint s' _ t') -> subtype s' t') sigma
         TyForAll _ _ _ -> check ctx (TermNode (getFI t) $ TmApp t1 [] ts) ty
         _ -> False
+    (TmLet x t1 t2, _) ->
+      let s = synth ctx t1
+          ctx' = (TmVarBind x s, 1) : ctx
+       in check ctx' t2 ty
     _ -> False
 
 subtype :: Type -> Type -> Bool
@@ -117,8 +125,11 @@ subtype ty1 ty2 =
     (TyBot, _) -> True
     (TyForAll tyXs1 tys1 ty1', TyForAll tyXs2 tys2 ty2')
       | sameLength tyXs1 tyXs2 ->
-          let cond1 = all (\(x, y) -> subtype x y) $ zip tys2 tys1
-              cond2 = subtype ty1' ty2'
+          let mapping = zip (getNames tyXs2) (getNames tyXs1)
+              tys2' = map (changeTypesNames mapping) tys2
+              ty2'' = changeTypesNames mapping ty2'
+              cond1 = all (\(x, y) -> subtype x y) $ zip tys2' tys1
+              cond2 = subtype ty1' ty2''
            in cond1 && cond2
     _ -> False
 
@@ -140,8 +151,20 @@ constraintGen vars unks ty1 ty2 =
     (TyForAll tyXs1 tys1 ty1', TyForAll tyXs2 tys2 ty2')
       | sameLength tyXs1 tyXs2 && (tyXs1 `intersect` (vars `union` unks)) == [] ->
           let vars' = tyXs1 `union` vars
-              cs = map (\(x, y) -> constraintGen vars' unks x y) $ zip tys2 tys1
-              d = constraintGen vars' unks ty1' ty2'
+              mapping = zip (getNames tyXs2) (getNames tyXs1)
+              tys2' = map (changeTypesNames mapping) tys2
+              ty2'' = changeTypesNames mapping ty2'
+              cs = map (\(x, y) -> constraintGen vars' unks x y) $ zip tys2' tys1
+              d = constraintGen vars' unks ty1' ty2''
+           in union (foldr (meetConstraintLists) d cs) [Constraint TyBot x TyTop | x <- unks]
+    (TyForAll tyXs1 tys1 ty1', TyForAll tyXs2 tys2 ty2')
+      | sameLength tyXs1 tyXs2 && (tyXs2 `intersect` (vars `union` unks)) == [] ->
+          let vars' = tyXs2 `union` vars
+              mapping = zip (getNames tyXs1) (getNames tyXs2)
+              tys1' = map (changeTypesNames mapping) tys1
+              ty1'' = changeTypesNames mapping ty1'
+              cs = map (\(x, y) -> constraintGen vars' unks x y) $ zip tys2 tys1'
+              d = constraintGen vars' unks ty1'' ty2'
            in union (foldr (meetConstraintLists) d cs) [Constraint TyBot x TyTop | x <- unks]
     _ -> []
   where

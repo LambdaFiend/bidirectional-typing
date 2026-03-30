@@ -16,6 +16,7 @@ traverseDownTm f t = TermNode fi $
        in TmAbs tyXs tmXs' (traverseTm' t1)
     TmApp t1 tys tms -> TmApp (traverseTm' t1) (map fTy tys) (map traverseTm' tms)
     TmAppInfer t1 tms -> TmAppInfer (traverseTm' t1) (map traverseTm' tms)
+    TmLet x t1 t2 -> TmLet x (traverseTm' t1) (traverseTm'' t2)
     _ -> tm
   where
     tm = getTm t'
@@ -75,8 +76,9 @@ shift c d t =
   let tm = getTm t; fi = getFI t; shift' = shift c d
    in UpdatedTmArrTm $
         case tm of
-          TmVar k l x -> (TermNode fi $ TmVar (if k < c then k else k + d) (l + d) x, id', id', tyShift' d)
+          TmVar k l x -> (TermNode fi $ TmVar (if k < c then k else k + d) (l + d) x, id', id', tyShift c d)
           TmAbs tyXs tmXs _ -> (t, shift (c + length tyXs + length tmXs) d, shift', tyShift (c + length tyXs) d)
+          TmLet _ _ _ -> (t, shift', shift (c + 1) d, tyShift c d)
           _ -> (t, shift', shift', tyShift c d)
 
 subst' :: Index -> TermNode -> TermNode -> TermNode
@@ -89,6 +91,7 @@ subst c j s t =
         case tm of
           TmVar k _ _ -> (if k == j + c then shift' 0 (j + c) s else t, id', id', id :: Type -> Type)
           TmAbs tyXs tmXs _ -> (t, subst (c + length tyXs + length tmXs) j s, subst', id :: Type -> Type)
+          TmLet _ _ _ -> (t, subst', subst (c + 1) j s, id :: Type -> Type)
           _ -> (t, subst', subst', id :: Type -> Type)
 
 genIndex' :: TermNode -> TermNode
@@ -104,6 +107,7 @@ genIndex ctx t =
             let ctx' = getNames tyXs ++ ctx
                 ctx'' = getNames tmXs ++ ctx'
              in (t, genIndex ctx'', genIndex', genIndexType ctx')
+          TmLet x _ _ -> (t, genIndex', genIndex (x : ctx), id :: Type -> Type)
           _ -> (t, genIndex', genIndex', genIndexType ctx)
   where
     genIndexType :: NameContext -> Type -> Type
@@ -130,6 +134,9 @@ fixTermsNames ctx t =
             ctx' = getNames tyXs' ++ ctx
             ctx'' = getNames tmXs' ++ ctx'
          in (TermNode fi $ TmAbs tyXs' tmXs' t1, fixTermsNames ctx'', fixTermsNames ctx'', fixTypesNames ctx')
+      TmLet x t1 t2 ->
+        let x' = fixName ctx x
+         in (TermNode fi $ TmLet x' t1 t2, fixTermsNames', fixTermsNames (x' : ctx), fixTypesNames ctx)
       _ -> (t, fixTermsNames', fixTermsNames', fixTypesNames ctx)
   where
     fi = getFI t
@@ -180,6 +187,7 @@ findConflicts t =
             else "#Conflicting variable names:\n" ++ show b1 ++ "\n" ++ show b2 ++ "\n" ++ "#" ++ b3 ++ findConflicts t1
     TmApp t1 _ ts -> findConflicts t1 ++ concat (map findConflicts ts)
     TmAppInfer t1 ts -> findConflicts t1 ++ concat (map findConflicts ts)
+    TmLet _ t1 t2 -> findConflicts t1 ++ findConflicts t2
     _ -> ""
   where
     findConflictsType :: Type -> String
@@ -210,6 +218,7 @@ getFreeVars n t =
        in tys ++ getFreeVars n'' t1
     TmApp t1 tys ts -> getFreeVars n t1 ++ concat (map (getFreeTyVars n) tys) ++ concat (map (getFreeVars n) ts)
     TmAppInfer t1 ts -> getFreeVars n t1 ++ concat (map (getFreeVars n) ts)
+    TmLet _ t1 t2 -> getFreeVars n t1 ++ getFreeVars (n + 1) t2
     _ -> []
 
 id' :: TermNode -> UpdatedTmArrTm
@@ -250,10 +259,11 @@ findTermErrors t =
         TmAbs _ tmXs t1 -> concat (map getAnnoErrors tmXs) ++ findTermErrors t1
         TmApp t1 tys ts -> findTermErrors t1 ++ concat (map findTypeErrors tys) ++ (concat $ map findTermErrors ts)
         TmAppInfer t1 ts -> findTermErrors t1 ++ (concat $ map findTermErrors ts)
+        TmLet _ t1 t2 -> findTermErrors t1 ++ findTermErrors t2
         _ -> []
   where
     getAnnoErrors :: Binding -> [String]
     getAnnoErrors b =
       case b of
-        TmVarBind x ty -> findTypeErrors ty
+        TmVarBind _ ty -> findTypeErrors ty
         _              -> []

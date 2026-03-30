@@ -35,6 +35,9 @@ showTerm ctx t =
         TmAppInfer t1 ts ->
           let ts' = "(" ++ intercalateArgs (showTerm ctx) ts ++ ")"
            in "(" ++ showTerm ctx t1 ++ ts' ++ ")"
+        TmLet x t1 t2 ->
+          let x' = fixName ctx x
+           in "(" ++ "let " ++ x ++ " = " ++ showTerm ctx t1 ++ " in " ++ showTerm (x' : ctx) t2 ++ ")"
         TmError e -> e
         _ -> "#Bad term for display:\n" ++ show tm ++ "#"
   where
