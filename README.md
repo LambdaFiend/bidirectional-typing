@@ -82,11 +82,9 @@ In contrast to YALCI's REPL, this one does not include desugaring, as it would h
 
 ## Some insights
 
-This section will be expanded in the near future. LTIBDT can now type! I'm likely going to add evaluation as well, let-bindings and some base types. Well, I might *only* add let-bindings.
+This section will be expanded in the near future.
 
-I would like to refactor the code in a way it enforces the bindings in function declarations to be distinct, without validation alone.
-
-I will complete this section once I've delved deeper into the implementation, although I could probably mention a couple of things.
+LTIBDT can now type! I'm likely going to add evaluation as well, let-bindings and some base types. Well, I might *only* add let-bindings.
 
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
