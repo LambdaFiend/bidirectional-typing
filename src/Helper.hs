@@ -101,8 +101,9 @@ genIndex ctx t =
         case tm of
           TmVarRaw x -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
           TmAbs tyXs tmXs _ ->
-            let ctx' = map getName tmXs ++ map getName tyXs ++ ctx
-             in (t, genIndex ctx', genIndex', genIndexType ctx')
+            let ctx' = map getName tyXs ++ ctx
+                ctx'' = map getName tmXs ++ ctx'
+             in (t, genIndex ctx'', genIndex', genIndexType ctx')
           _ -> (t, genIndex', genIndex', genIndexType ctx)
   where
     genIndexType :: NameContext -> Type -> Type
@@ -126,8 +127,9 @@ fixTermsNames ctx t =
       TmAbs tyXs tmXs t1 ->
         let tyXs' = fixBindingNames ctx tyXs tyXs
             tmXs' = fixBindingNames ctx tmXs tmXs
-            ctx' = getNames tmXs' ++ getNames tyXs' ++ ctx
-         in (TermNode fi $ TmAbs tyXs' tmXs' t1, fixTermsNames ctx', fixTermsNames ctx', fixTypesNames ctx')
+            ctx' = getNames tyXs' ++ ctx
+            ctx'' = getNames tmXs' ++ ctx'
+         in (TermNode fi $ TmAbs tyXs' tmXs' t1, fixTermsNames ctx'', fixTermsNames ctx'', fixTypesNames ctx')
       _ -> (t, fixTermsNames', fixTermsNames', fixTypesNames ctx)
   where
     fi = getFI t

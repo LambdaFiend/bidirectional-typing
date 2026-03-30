@@ -13,7 +13,7 @@ type TypeContext = [(Name, Type)]
 
 type NameContext = [Name]
 
-type BindingContext = [Binding]
+type BindingContext = [(Binding, Index)]
 
 type ConstraintList = [Constraint]
 
@@ -104,10 +104,10 @@ applyToBindType f b =
     TmVarBind x ty -> TmVarBind x $ f ty
     _              -> b
 
-getTypeFromContext :: BindingContext -> Index -> Type
-getTypeFromContext ctx ind
+getInfoFromContext :: BindingContext -> Index -> (Type, Index)
+getInfoFromContext ctx ind
   | ind >= 0 && ind < length ctx =
       case ctx !! ind of
-        TmVarBind _ ty -> ty
-        _ -> TyError "\n(TmVar: possibly wrong binding for variable)"
-  | otherwise = TyError "\n(TmVar: no type context for variable)"
+        (TmVarBind _ ty, info) -> (ty, info)
+        (_, info) -> (TyError "\n(TmVar: possibly wrong binding for variable)", info)
+  | otherwise = (TyError "\n(TmVar: no type context for variable)", 0)

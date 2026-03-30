@@ -1,28 +1,30 @@
 module Typing where
 
 import           Data.List
+import           Debug.Trace
 import           Helper
 import           Syntax
 
 synth' :: TermNode -> Type
-synth' t = synth [] t
+synth' t = let x = synth [] t in trace (show x) x
+
+zipBindings :: [Binding] -> BindingContext
+zipBindings bs = let bLen = length bs in zip bs [bLen, bLen - 1, 1]
 
 synth :: BindingContext -> TermNode -> Type
 synth ctx t =
   case getTm t of
-    TmVar k _ _ -> getTypeFromContext ctx k
+    TmVar k _ _ ->
+      let (ty', info) = getInfoFromContext ctx k
+       in tyShift' (k + info) ty'
     TmAbs tyXs tmXs t1
       | areAnnotated tmXs ->
-          let tyXsLen = length tyXs
-              tmXsLen = length tmXs
-              shiftDown = tyShift (-tyXsLen) (-tmXsLen)
-              shiftUp = tyShift 0 (tyXsLen + tmXsLen)
-              ctx' = map (applyToBindType shiftUp) ctx
-              ctx'' = tmXs ++ tyXs ++ ctx'
-              synthT1 = synth ctx'' t1
+          let shiftDown = tyShift' (negate $ length tmXs)
+              ctx' = zipBindings tmXs ++ zipBindings tyXs ++ ctx
+              synthT1 = synth ctx' t1
            in case synthT1 of
                 TyError e -> TyError ("synth TmAbs: function body failed to synthesize(\n" ++ e ++ "\n)")
-                _ -> shiftDown $ TyForAll tyXs (getTypes tmXs) synthT1
+                _ -> TyForAll tyXs (getTypes tmXs) (shiftDown synthT1)
     TmAbs _ _ _ -> TyError "synth TmAbs: missing annotations"
     TmApp t1 tys ts ->
       case synth ctx t1 of
@@ -44,7 +46,9 @@ synth ctx t =
         TyForAll tyXs tys ty1
           | length tyXs > 0 ->
               let tys' = map (synth ctx) ts
-                  ds = map (\(x, y) -> constraintGen [] tyXs x y) $ zip tys' tys
+                  tyXsLen = length tyXs
+                  tys'' = map (tyShift (-tyXsLen) (-tyXsLen)) tys
+                  ds = map (\(x, y) -> constraintGen [] tyXs x y) $ zip tys' tys''
                   c =
                     case ds of
                       (d' : ds') -> foldr (meetConstraintLists) d' ds'
@@ -54,30 +58,33 @@ synth ctx t =
                   orderedSigma = [ty | (TyVarBind x1) <- tyXs, (TyVarBind x2, ty) <- minimalSigma, x1 == x2]
                   tysZipRange = zip (reverse orderedSigma) [0 ..]
                   fixedIndexTys = map (\(x, k) -> tyShift' k x) tysZipRange
-               in if cond
-                    then foldr typingEvalSubst ty1 fixedIndexTys
-                    else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
-        _ -> synth ctx (TermNode (getFI t) $ TmApp t1 [] ts)
+               in trace (show minimalSigma ++ "\n" ++ show c ++ "\n" ++ show ds ++ "\n" ++ show tys' ++ "\n" ++ show tys) $
+                    if cond
+                      then foldr typingEvalSubst ty1 fixedIndexTys
+                      else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
+        TyForAll _ _ _ -> synth ctx (TermNode (getFI t) $ TmApp t1 [] ts)
+        _ -> TyError "synth TmAppInfer _: not a valid function type"
     _ -> TyError "synth _: not a valid term"
 
 check :: BindingContext -> TermNode -> Type -> Bool
 check ctx t ty =
   case (getTm t, ty) of
     (_, TyTop) -> not $ isTyError $ synth ctx t
-    (TmVar k _ _, _) -> subtype (getTypeFromContext ctx k) ty
-    -- the shifts in the rule below this line were added so that checks could be made. this addition could be plain wrong.
-    -- I need to think this through.
+    (TmVar k _ _, _) ->
+      let (ty', info) = getInfoFromContext ctx k
+          ty'' = tyShift' (k + info) ty'
+       in subtype ty'' ty
     (TmAbs tyXs1 tmXs t1, TyForAll tyXs2 tys ty1)
       | sameLength tyXs1 tyXs2 && areAnnotated tmXs ->
-          let ctx' = tyXs1 ++ ctx
-              tysZipTmTys = zip tys (map (tyShift 0 (negate $ length tmXs)) $ getTypes tmXs)
+          let ctx' = zipBindings tmXs ++ zipBindings tyXs1 ++ ctx
+              tysZipTmTys = zip tys (getTypes tmXs)
            in if all (\(x, y) -> subtype x y) tysZipTmTys
-                then check (tmXs ++ ctx') t1 (tyShift 0 (length tmXs) ty1)
+                then check ctx' t1 ty1
                 else False
     (TmAbs tyXs1 tmXs t1, TyForAll tyXs2 tys ty1)
       | sameLength tyXs1 tyXs2 ->
           let typedTmBinds = map (\(x, y) -> addTypeToBind x y) (zip tmXs tys)
-              ctx' = typedTmBinds ++ tyXs1 ++ ctx
+              ctx' = zipBindings typedTmBinds ++ zipBindings tyXs1 ++ ctx
            in check ctx' t1 ty1
     (TmApp t1 tys ts, _) ->
       case synth ctx t1 of
@@ -97,10 +104,13 @@ check ctx t ty =
         TyForAll tyXs tys ty1
           | length tyXs > 0 ->
               let tys' = map (synth ctx) ts
-                  cs = map (\(x, y) -> constraintGen [] tyXs x y) $ zip tys' tys
+                  tyXsLen = length tyXs
+                  tys'' = map (tyShift (-tyXsLen) (-tyXsLen)) tys
+                  cs = map (\(x, y) -> constraintGen [] tyXs x y) $ zip tys' tys''
                   d = constraintGen [] tyXs ty1 ty
                   sigma = foldr (meetConstraintLists) d cs
                in all (\(Constraint s' _ t') -> subtype s' t') sigma
+        TyForAll _ _ _ -> check ctx (TermNode (getFI t) $ TmApp t1 [] ts) ty
         _ -> False
     _ -> False
 
@@ -137,22 +147,22 @@ constraintGen vars unks ty1 ty2 =
     (TyVar _ _ x, _)
       | elem (TyVarBind x) unks && (getFreeTyVars' ty2 `intersect` unks) == [] ->
           let t = demote vars ty2
-           in [Constraint TyBot (TyVarBind x) t]
+           in union' [Constraint TyBot (TyVarBind x) t] [Constraint TyBot x' TyTop | x' <- unks]
     (_, TyVar _ _ x)
       | elem (TyVarBind x) unks && (getFreeTyVars' ty1 `intersect` unks) == [] ->
           let t = promote vars ty1
-           in [Constraint t (TyVarBind x) TyTop]
-    -- very dangerous the line below this comment. x1 == x2, why does it work? I did think of something, but I have forgotten probably because it was
-    -- not sound. the same goes to k1 == k2, in a way. I need to think really hard about this.
-    (TyVar k1 _ x1, TyVar k2 _ x2)
-      | (k1 == k2 || x1 == x2) && not (elem (TyVarBind x1) unks) -> [Constraint TyBot x TyTop | x <- unks]
+           in union' [Constraint t (TyVarBind x) TyTop] [Constraint TyBot x' TyTop | x' <- unks]
+    (TyVar k1 _ x1, TyVar k2 _ _)
+      | k1 == k2 && not (elem (TyVarBind x1) unks) -> [Constraint TyBot x TyTop | x <- unks]
     (TyForAll tyXs1 tys1 ty1', TyForAll tyXs2 tys2 ty2')
       | sameLength tyXs1 tyXs2 && (tyXs1 `intersect` (vars `union` unks)) == [] ->
           let vars' = tyXs1 `union` vars
               cs = map (\(x, y) -> constraintGen vars' unks x y) $ zip tys2 tys1
               d = constraintGen vars' unks ty1' ty2'
-           in foldr (meetConstraintLists) d cs
+           in union (foldr (meetConstraintLists) d cs) [Constraint TyBot x TyTop | x <- unks]
     _ -> []
+  where
+    union' = unionBy (\(Constraint _ (TyVarBind x) _) (Constraint _ (TyVarBind y) _) -> x == y)
 
 calculateSubst :: ConstraintList -> Type -> [(Binding, Type)]
 calculateSubst cs r =

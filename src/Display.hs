@@ -23,10 +23,11 @@ showTerm ctx t =
           let tyXs' = fixBindingNames' tyXs
               tyXs'' = "[" ++ intercalate ", " tyXs' ++ "]"
               tmXs' = fixBindingNames' tmXs
-              ctx' = tmXs' ++ tyXs' ++ ctx
+              ctx' = tyXs' ++ ctx
+              ctx'' = tmXs' ++ ctx'
               argsZipAnnos = zip tmXs' (map (showAnno ctx') tmXs)
               tmXs'' = "(" ++ intercalateArgs (\(x, y) -> x ++ y) argsZipAnnos ++ ")"
-           in "(" ++ "fun" ++ tyXs'' ++ tmXs'' ++ showTerm ctx' t1 ++ ")"
+           in "(" ++ "fun" ++ tyXs'' ++ tmXs'' ++ showTerm ctx'' t1 ++ ")"
         TmApp t1 tys ts ->
           let tys' = "[" ++ intercalateArgs (showType ctx) tys ++ "]"
               ts' = "(" ++ intercalateArgs (showTerm ctx) ts ++ ")"
