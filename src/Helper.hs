@@ -203,7 +203,11 @@ getFreeVars n t =
     TmAbs tyXs tmXs t1 ->
       let n' = length tyXs + n
           n'' = length tmXs + n'
-       in concat (map (getFreeTyVars n') (getTypes tmXs)) ++ getFreeVars n'' t1
+          tys =
+            if all isAnnotated tmXs
+              then concat (map (getFreeTyVars n') (getTypes tmXs))
+              else []
+       in tys ++ getFreeVars n'' t1
     TmApp t1 tys ts -> getFreeVars n t1 ++ concat (map (getFreeTyVars n) tys) ++ concat (map (getFreeVars n) ts)
     TmAppInfer t1 ts -> getFreeVars n t1 ++ concat (map (getFreeVars n) ts)
     _ -> []
