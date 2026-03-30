@@ -15,6 +15,19 @@ type NameContext = [Name]
 
 type BindingContext = [Binding]
 
+type ConstraintList = [Constraint]
+
+data Constraint = Constraint Type Binding Type
+  deriving (Show, Eq)
+
+data Variance
+  = Constant
+  | Covariant
+  | Contravariant
+  | Invariant
+  | VarianceError
+  deriving (Show, Eq, Ord)
+
 data Binding
   = TyVarBind {getName :: Name}
   | TmVarBind {getName :: Name, getType :: Type}
@@ -72,3 +85,29 @@ isAnnotated b =
 
 getOtherArgs :: [Binding] -> Name -> [Name]
 getOtherArgs bs x = getNames bs \\ [x]
+
+isTyError :: Type -> Bool
+isTyError ty =
+  case ty of
+    TyError _ -> True
+    _         -> False
+
+addTypeToBind :: Binding -> Type -> Binding
+addTypeToBind b ty =
+  case b of
+    TmVarNoBind x -> TmVarBind x ty
+    _             -> b
+
+applyToBindType :: (Type -> Type) -> Binding -> Binding
+applyToBindType f b =
+  case b of
+    TmVarBind x ty -> TmVarBind x $ f ty
+    _              -> b
+
+getTypeFromContext :: BindingContext -> Index -> Type
+getTypeFromContext ctx ind
+  | ind >= 0 && ind < length ctx =
+      case ctx !! ind of
+        TmVarBind _ ty -> ty
+        _ -> TyError "\n(TmVar: possibly wrong binding for variable)"
+  | otherwise = TyError "\n(TmVar: no type context for variable)"

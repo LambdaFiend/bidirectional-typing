@@ -16,6 +16,7 @@ traverseDownTm f t = TermNode fi $
        in TmAbs tyXs tmXs' (traverseTm' t1)
     TmApp t1 tys tms -> TmApp (traverseTm' t1) (map fTy tys) (map traverseTm' tms)
     TmAppInfer t1 tms -> TmAppInfer (traverseTm' t1) (map traverseTm' tms)
+    _ -> tm
   where
     tm = getTm t'
     fi = getFI t'
@@ -104,7 +105,7 @@ genIndex ctx t =
              in (t, genIndex ctx', genIndex', genIndexType ctx')
           _ -> (t, genIndex', genIndex', genIndexType ctx)
   where
-    genIndexType :: [Name] -> Type -> Type
+    genIndexType :: NameContext -> Type -> Type
     genIndexType ctx ty =
       case ty of
         TyForAll tyXs tys ty1 ->
@@ -113,6 +114,48 @@ genIndex ctx t =
            in TyForAll tyXs (map genIndexType' tys) $ genIndexType' ty1
         TyVarRaw x -> TyVar (length $ takeWhile (/= x) ctx) (length ctx) x
         _ -> ty
+
+fixTermNames' :: TermNode -> TermNode
+fixTermNames' t = traverseDownTm (fixTermsNames []) t
+
+fixTermsNames :: NameContext -> TermNode -> UpdatedTmArrTm
+fixTermsNames ctx t =
+  UpdatedTmArrTm $
+    case getTm t of
+      TmVar k l x -> (TermNode fi $ if k >= 0 && k < length ctx then TmVar k l (ctx !! k) else TmVar k l (fixName ctx x), fixTermsNames', fixTermsNames', fixTypesNames ctx)
+      TmAbs tyXs tmXs t1 ->
+        let tyXs' = fixBindingNames ctx tyXs tyXs
+            tmXs' = fixBindingNames ctx tmXs tmXs
+            ctx' = getNames tmXs' ++ getNames tyXs' ++ ctx
+         in (TermNode fi $ TmAbs tyXs' tmXs' t1, fixTermsNames ctx', fixTermsNames ctx', fixTypesNames ctx')
+      _ -> (t, fixTermsNames', fixTermsNames', fixTypesNames ctx)
+  where
+    fi = getFI t
+    fixTermsNames' = fixTermsNames ctx
+    fixTypesNames :: NameContext -> Type -> Type
+    fixTypesNames ctx ty =
+      case ty of
+        TyForAll tyXs tys ty1 ->
+          let tyXs' = fixBindingNames ctx tyXs tyXs
+              ctx' = getNames tyXs' ++ ctx
+           in TyForAll tyXs' (map (fixTypesNames ctx') tys) (fixTypesNames ctx' ty1)
+        TyVar k l x -> if k >= 0 && k < length ctx then TyVar k l (ctx !! k) else TyVar k l (fixName ctx x)
+        _ -> ty
+
+fixName :: NameContext -> Name -> Name
+fixName ctx x
+  | (length $ filter ((==) x) ctx) < 1 = x
+  | otherwise = fixName ctx (x ++ "\'")
+
+fixBindingNames :: NameContext -> [Binding] -> [Binding] -> [Binding]
+fixBindingNames _ [] _ = []
+fixBindingNames ctx (x : xs) ys =
+  case x of
+    TmVarBind x' tm -> TmVarBind (fun x') tm : fixBindingNames ctx xs ys
+    TmVarNoBind x'  -> TmVarNoBind (fun x') : fixBindingNames ctx xs ys
+    TyVarBind x'    -> TyVarBind (fun x') : fixBindingNames ctx xs ys
+  where
+    fun = (\x' -> fixName ((getNames ys \\ [x']) ++ ctx) x')
 
 findConflicts' :: TermNode -> Either String ()
 findConflicts' t =
@@ -131,7 +174,7 @@ findConflicts t =
               then concat $ map findConflictsType $ map getType tmXs
               else []
        in if b1 == [] && b2 == [] && b3 == []
-            then ""
+            then findConflicts t1
             else "#Conflicting variable names:\n" ++ show b1 ++ "\n" ++ show b2 ++ "\n" ++ "#" ++ b3 ++ findConflicts t1
     TmApp t1 _ ts -> findConflicts t1 ++ concat (map findConflicts ts)
     TmAppInfer t1 ts -> findConflicts t1 ++ concat (map findConflicts ts)
@@ -143,7 +186,7 @@ findConflicts t =
         TyForAll tyXs tys ty1 ->
           let b = nub (map getName tyXs \\ nub (map getName tyXs))
            in if b == []
-                then ""
+                then findConflictsType ty1
                 else "#Conflicting variable names:\n" ++ show b ++ "#" ++ concat (map findConflictsType tys) ++ findConflictsType ty1
         _ -> ""
 
@@ -181,14 +224,14 @@ findTermErrors :: TermNode -> [String]
 findTermErrors t =
   let tm = getTm t
    in case tm of
-        TmError e        -> [e]
-        TmAbs _ tmXs t1  -> concat (map getAnnoErrors tmXs) ++ findTermErrors t1
-        TmApp t1 tys ts  -> findTermErrors t1 ++ concat (map findTypeErrors tys) ++ (concat $ map findTermErrors ts)
+        TmError e -> [e]
+        TmAbs _ tmXs t1 -> concat (map getAnnoErrors tmXs) ++ findTermErrors t1
+        TmApp t1 tys ts -> findTermErrors t1 ++ concat (map findTypeErrors tys) ++ (concat $ map findTermErrors ts)
         TmAppInfer t1 ts -> findTermErrors t1 ++ (concat $ map findTermErrors ts)
-        _                -> []
+        _ -> []
   where
     getAnnoErrors :: Binding -> [String]
     getAnnoErrors b =
       case b of
         TmVarBind x ty -> findTypeErrors ty
-        _ -> []
+        _              -> []

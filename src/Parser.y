@@ -33,10 +33,10 @@ Term
   | Fun { $1 }
 
 App
-  : App "[" TypeMany "]" "(" AtomMany ")" { TermNode (getFI $1) $ TmApp $1 $3 $6 }
+  : App "[" TypeMany "]" "(" TermMany ")" { TermNode (getFI $1) $ TmApp $1 $3 $6 }
   | App "[" TypeMany "]" "(" ")"          { TermNode (getFI $1) $ TmApp $1 $3 [] }
-  | App "[" "]" "(" AtomMany ")"          { TermNode (getFI $1) $ TmApp $1 [] $5 }
-  | App "(" AtomMany ")"                  { TermNode (getFI $1) $ TmAppInfer $1 $3 }
+  | App "[" "]" "(" TermMany ")"          { TermNode (getFI $1) $ TmApp $1 [] $5 }
+  | App "(" TermMany ")"                  { TermNode (getFI $1) $ TmAppInfer $1 $3 }
   | App "(" ")"                           { TermNode (getFI $1) $ TmAppInfer $1 [] }
   | Atom                                  { $1 }
 
@@ -47,9 +47,9 @@ Atom
 Value
   : NameLower { TermNode (fst $1) $ TmVarRaw (snd $1) }
 
-AtomMany
-  : Atom "," AtomMany { $1 : $3 }
-  | Atom              { $1 : [] }
+TermMany
+  : Term "," TermMany { $1 : $3 }
+  | Term              { $1 : [] }
 
 TypeMany
   : Type "," TypeMany { $1 : $3 }
