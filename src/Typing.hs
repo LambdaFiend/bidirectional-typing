@@ -1,12 +1,11 @@
 module Typing where
 
 import           Data.List
-import           Debug.Trace
 import           Helper
 import           Syntax
 
 synth' :: TermNode -> Type
-synth' t = let x = synth [] t in trace (show x) x
+synth' t = synth [] t
 
 synth :: BindingContext -> TermNode -> Type
 synth ctx t =
@@ -55,10 +54,9 @@ synth ctx t =
                   orderedSigma = [ty | (TyVarBind x1) <- tyXs, (TyVarBind x2, ty) <- minimalSigma, x1 == x2]
                   tysZipRange = zip (reverse orderedSigma) [0 ..]
                   fixedIndexTys = map (\(x, k) -> tyShift' k x) tysZipRange
-               in trace (show minimalSigma ++ "\n" ++ show c ++ "\n" ++ show ds ++ "\n" ++ show tys' ++ "\n" ++ show tys) $
-                    if cond
-                      then foldr typingEvalSubst ty1 fixedIndexTys
-                      else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
+               in if cond
+                    then foldr typingEvalSubst ty1 fixedIndexTys
+                    else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
         TyForAll _ _ _ -> synth ctx (TermNode (getFI t) $ TmApp t1 [] ts)
         _ -> TyError "synth TmAppInfer _: not a valid function type"
     _ -> TyError "synth _: not a valid term"
