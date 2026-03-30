@@ -111,3 +111,6 @@ getInfoFromContext ctx ind
         (TmVarBind _ ty, info) -> (ty, info)
         (_, info) -> (TyError "\n(TmVar: possibly wrong binding for variable)", info)
   | otherwise = (TyError "\n(TmVar: no type context for variable)", 0)
+
+zipBindings :: [Binding] -> BindingContext
+zipBindings bs = let bLen = length bs in zip bs [bLen, bLen - 1, 1]
