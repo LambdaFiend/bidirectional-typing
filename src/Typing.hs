@@ -8,9 +8,6 @@ import           Syntax
 synth' :: TermNode -> Type
 synth' t = let x = synth [] t in trace (show x) x
 
-zipBindings :: [Binding] -> BindingContext
-zipBindings bs = let bLen = length bs in zip bs [bLen, bLen - 1, 1]
-
 synth :: BindingContext -> TermNode -> Type
 synth ctx t =
   case getTm t of
