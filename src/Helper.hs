@@ -76,7 +76,8 @@ genIndex ctx t =
   let tm = getTm t; fi = getFI t; genIndex' = genIndex ctx
    in UpdatedTmArrTm $
         case tm of
-          TmVarRaw x -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
+          TmVarRaw x | elem x ctx -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
+          TmVarRaw x -> (TermNode fi $ TmError ("Free variables are not allowed: " ++ x), genIndex', genIndex', id :: Type -> Type)
           TmAbs tyXs tmXs _ ->
             let ctx' = getNames tyXs ++ ctx
                 ctx'' = getNames tmXs ++ ctx'
@@ -91,7 +92,8 @@ genIndex ctx t =
           let ctx' = map getName tyXs ++ ctx
               genIndexType' = genIndexType ctx'
            in TyForAll tyXs (map genIndexType' tys) $ genIndexType' ty1
-        TyVarRaw x -> TyVar (length $ takeWhile (/= x) ctx) (length ctx) x
+        TyVarRaw x | elem x ctx -> TyVar (length $ takeWhile (/= x) ctx) (length ctx) x
+        TyVarRaw x -> TyError ("Free variables are not allowed: " ++ x)
         _ -> ty
 
 fixTermNames' :: TermNode -> TermNode
@@ -173,27 +175,6 @@ findConflicts t =
                 then findConflictsType ty1
                 else "#Conflicting variable names:\n" ++ show b ++ "#" ++ concat (map findConflictsType tys) ++ findConflictsType ty1
         _ -> ""
-
-getFreeVars' :: TermNode -> [Binding]
-getFreeVars' t = getFreeVars 0 t
-
-getFreeVars :: Index -> TermNode -> [Binding]
-getFreeVars n t =
-  case getTm t of
-    TmVarRaw x -> [TmVarNoBind x]
-    TmVar k _ x -> if k < n then [] else [TmVarNoBind x]
-    TmAbs tyXs tmXs t1 ->
-      let n' = length tyXs + n
-          n'' = length tmXs + n'
-          tys =
-            if all isAnnotated tmXs
-              then concat (map (getFreeTyVars n') (getTypes tmXs))
-              else []
-       in tys ++ getFreeVars n'' t1
-    TmApp t1 tys ts -> getFreeVars n t1 ++ concat (map (getFreeTyVars n) tys) ++ concat (map (getFreeVars n) ts)
-    TmAppInfer t1 ts -> getFreeVars n t1 ++ concat (map (getFreeVars n) ts)
-    TmLet _ t1 t2 -> getFreeVars n t1 ++ getFreeVars (n + 1) t2
-    _ -> []
 
 id' :: TermNode -> UpdatedTmArrTm
 id' t = UpdatedTmArrTm (t, id', id', id :: Type -> Type)
