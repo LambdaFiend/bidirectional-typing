@@ -109,10 +109,11 @@ genIndex ctx t =
     genIndexType :: [Name] -> Type -> Type
     genIndexType ctx ty =
       case ty of
-        TyArrow ty1 ty2 -> TyArrow (genIndexType ctx ty1) (genIndexType ctx ty2)
-        TyForAll x ty1  -> TyForAll x (genIndexType (x : ctx) ty1)
-        TyVarRaw x      -> TyVar (length $ takeWhile (/= x) ctx) (length ctx) x
-        _               -> ty
+        TyArrow ty1 ty2         -> TyArrow (genIndexType ctx ty1) (genIndexType ctx ty2)
+        TyForAll x ty1          -> TyForAll x (genIndexType (x : ctx) ty1)
+        TyVarRaw x | elem x ctx -> TyVar (length $ takeWhile (/= x) ctx) (length ctx) x
+        TyVarRaw x              -> TyError ("Free variables are not allowed: " ++ x)
+        _                       -> ty
 
 id' :: TermNode -> UpdatedTmArrTm
 id' t = UpdatedTmArrTm (t, id', id', id :: Type -> Type)
@@ -282,5 +283,5 @@ findTermErrors t = let tm = getTm t in
     TmError e -> [e]
     TmApp t1 t2 -> findTermErrors t1 ++ findTermErrors t2
     TmAbs _ t1 -> findTermErrors t1
-    TmAnno t1 _ -> findTermErrors t1
+    TmAnno t1 ty -> findTermErrors t1 ++ findTypeErrors ty
     _ -> []
