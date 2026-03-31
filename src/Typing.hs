@@ -1,7 +1,6 @@
 module Typing where
 
 import           Data.List
-import           Debug.Trace
 import           Helper
 import           Syntax
 
