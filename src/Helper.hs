@@ -68,32 +68,6 @@ tySubst c j s t =
   where
     tySubst' = tySubst c j s
 
-shift' :: Index -> Index -> TermNode -> TermNode
-shift' c d t = traverseDownTm (shift c d) t
-
-shift :: Index -> Index -> TermNode -> UpdatedTmArrTm
-shift c d t =
-  let tm = getTm t; fi = getFI t; shift' = shift c d
-   in UpdatedTmArrTm $
-        case tm of
-          TmVar k l x -> (TermNode fi $ TmVar (if k < c then k else k + d) (l + d) x, id', id', tyShift c d)
-          TmAbs tyXs tmXs _ -> (t, shift (c + length tyXs + length tmXs) d, shift', tyShift (c + length tyXs) d)
-          TmLet _ _ _ -> (t, shift', shift (c + 1) d, tyShift c d)
-          _ -> (t, shift', shift', tyShift c d)
-
-subst' :: Index -> TermNode -> TermNode -> TermNode
-subst' j s t = traverseDownTm (subst 0 j s) t
-
-subst :: Index -> Index -> TermNode -> TermNode -> UpdatedTmArrTm
-subst c j s t =
-  let tm = getTm t; subst' = subst c j s
-   in UpdatedTmArrTm $
-        case tm of
-          TmVar k _ _ -> (if k == j + c then shift' 0 (j + c) s else t, id', id', id :: Type -> Type)
-          TmAbs tyXs tmXs _ -> (t, subst (c + length tyXs + length tmXs) j s, subst', id :: Type -> Type)
-          TmLet _ _ _ -> (t, subst', subst (c + 1) j s, id :: Type -> Type)
-          _ -> (t, subst', subst', id :: Type -> Type)
-
 genIndex' :: TermNode -> TermNode
 genIndex' t = traverseDownTm (genIndex []) t
 
