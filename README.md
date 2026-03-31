@@ -89,5 +89,7 @@ I would like to compare LTIBDT against SFBDT. I'm not going to do it thoroughly 
 
 I will say a couple more things, eventually.
 
+I probably should refactor the code, again. Maybe the same for SFBDT.
+
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
