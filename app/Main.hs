@@ -4,7 +4,6 @@ import           Control.Exception
 import           Data.Char
 import           Data.List
 import           Display
-import           Evaluation
 import           Helper
 import           Lexer
 import           Parser
@@ -287,21 +286,6 @@ typeEnvironment (e : env) = do
       return ((fst e ++ " had a type error") : rest)
     Right _ -> do
       rest <- typeEnvironment env
-      return rest
-
-evalEnvironment :: Environment -> IO [String]
-evalEnvironment [] = return []
-evalEnvironment (e : env) = do
-  setSGR [SetColor Foreground Vivid Green]
-  putStrLn $ fst e ++ ":"
-  setSGR [Reset]
-  first <- printEval $ snd e
-  case first of
-    TermNode noPos (TmError "") -> do
-      rest <- evalEnvironment env
-      return ((fst e ++ " had an evaluation error") : rest)
-    _ -> do
-      rest <- evalEnvironment env
       return rest
 
 simplyParseCommands' :: [String] -> [(String, String)]
@@ -602,56 +586,6 @@ getMultipleASTsFromTerms (x : xs) = do
       setSGR [Reset]
       return next
     Right term' -> return ((fst x, term') : next)
-
-printEval :: TermNode -> IO TermNode
-printEval ast = do
-  ast' <-
-    if isVal ast
-      then do
-        putStrLn "The given term is already a value"
-        return ast
-      else do
-        let ast' = eval' ast
-            errs = findTermErrors' $ snd ast'
-        if errs /= []
-          then do
-            putStrLn errs
-            setSGR [SetColor Foreground Vivid Red]
-            putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-            setSGR [Reset]
-            return $ TermNode noPos $ TmError ""
-          else do
-            setSGR [SetColor Foreground Vivid Green]
-            putStrLn $ "The given term evaluated a total of " ++ (show $ fst ast') ++ " times: "
-            setSGR [Reset]
-            printTerm $ snd ast'
-            return $ snd ast'
-  return $ ast'
-
-printEvalN :: Counter -> TermNode -> IO TermNode
-printEvalN n ast = do
-  ast' <-
-    if isVal ast
-      then do
-        putStrLn "The given term is already a value"
-        return ast
-      else do
-        let ast' = evalN n ast
-            errs = findTermErrors' $ snd ast'
-        if errs /= []
-          then do
-            putStrLn errs
-            setSGR [SetColor Foreground Vivid Red]
-            putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-            setSGR [Reset]
-            return $ TermNode noPos $ TmError ""
-          else do
-            setSGR [SetColor Foreground Vivid Green]
-            putStrLn $ "The given term evaluated a total of " ++ (show $ (n - fst ast')) ++ " times: "
-            setSGR [Reset]
-            printTerm $ snd ast'
-            return $ snd ast'
-  return $ ast'
 
 printType :: TermNode -> IO (Either String String)
 printType ast = do
