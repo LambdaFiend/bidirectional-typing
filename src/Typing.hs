@@ -52,12 +52,13 @@ synth ctx t =
                       _          -> []
                   minimalSigma = calculateSubst c ty1
                   cond = all ((not . isTyError) . snd) minimalSigma && tyXs == nub [x1 | x1 <- tyXs, (x2, _) <- minimalSigma, x1 == x2]
-                  orderedSigma = [ty | (TyVarBind x1) <- tyXs, (TyVarBind x2, ty) <- minimalSigma, x1 == x2]
+                  orderedSigma = nub [ty | (TyVarBind x1) <- tyXs, (TyVarBind x2, ty) <- minimalSigma, x1 == x2]
                   tysZipRange = zip (reverse orderedSigma) [0 ..]
                   fixedIndexTys = map (\(x, k) -> tyShift' k x) tysZipRange
-               in if cond
-                    then foldr typingEvalSubst ty1 fixedIndexTys
-                    else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
+               in trace (show orderedSigma) $
+                    if cond
+                      then foldr typingEvalSubst ty1 fixedIndexTys
+                      else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
         TyForAll _ _ _ -> synth ctx (TermNode (getFI t) $ TmApp t1 [] ts)
         _ -> TyError "synth TmAppInfer _: not a valid function type"
     TmLet x t1 t2 ->
