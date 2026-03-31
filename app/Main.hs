@@ -646,7 +646,15 @@ getTermFromAST txt = do
       putStrLn e
       setSGR [Reset]
       return $ Left ""
-    Right ast' -> return $ Right $ genIndex' ast'
+    Right ast' ->
+      let ast'' = genIndex' ast'
+       in case findTermErrors' ast'' of
+            [] -> return $ Right ast''
+            es -> do
+              setSGR [SetColor Foreground Vivid Red]
+              putStrLn es
+              setSGR [Reset]
+              return $ Left ""
 
 getMultipleASTsFromTerms :: [(String, String)] -> IO [(String, TermNode)]
 getMultipleASTsFromTerms [] = return []
