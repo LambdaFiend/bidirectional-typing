@@ -15,6 +15,7 @@ traverseDownTm f t = TermNode fi $
     TmApp t1 t2  -> TmApp (traverseTm' t1) (traverseTm' t2)
     TmUnit       -> tm
     TmAnno t1 ty -> TmAnno (traverseTm' t1) (fTy ty)
+    _            -> tm
   where
     tm = getTm t'
     fi = getFI t'
@@ -100,7 +101,8 @@ genIndex ctx t =
   let tm = getTm t; fi = getFI t; genIndex' = genIndex ctx
    in UpdatedTmArrTm $
         case tm of
-          TmVarRaw x -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
+          TmVarRaw x | elem x ctx -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
+          TmVarRaw x -> (TermNode fi $ TmError ("Free variables are not allowed: " ++ x), genIndex', genIndex', id :: Type -> Type)
           TmAbs x _ -> (t, genIndex (x : ctx), genIndex', id :: Type -> Type)
           _ -> (t, genIndex', genIndex', genIndexType [])
   where
