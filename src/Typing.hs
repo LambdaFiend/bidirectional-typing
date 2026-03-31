@@ -54,10 +54,9 @@ synth ctx t =
                   orderedSigma = nub [ty | (TyVarBind x1) <- tyXs, (TyVarBind x2, ty) <- minimalSigma, x1 == x2]
                   tysZipRange = zip (reverse orderedSigma) [0 ..]
                   fixedIndexTys = map (\(x, k) -> tyShift' k x) tysZipRange
-               in trace (show orderedSigma) $
-                    if cond
-                      then foldr typingEvalSubst ty1 fixedIndexTys
-                      else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
+               in if cond
+                    then foldr typingEvalSubst ty1 fixedIndexTys
+                    else TyError "synth TmAppInfer TyForAll: couldn't find a minimal substitution"
         TyForAll _ _ _ -> synth ctx (TermNode (getFI t) $ TmApp t1 [] ts)
         _ -> TyError "synth TmAppInfer _: not a valid function type"
     TmLet x t1 t2 ->
@@ -78,10 +77,9 @@ check ctx t ty =
       | sameLength tmXs tys && sameLength tyXs1 tyXs2 && areAnnotated tmXs ->
           let ctx' = zipBindings tmXs ++ zipBindings tyXs1 ++ ctx
               tysZipTmTys = zip tys (getTypes tmXs)
-           in trace (show $ (t1, ty1, ctx')) $
-                if all (\(x, y) -> subtype x y) tysZipTmTys
-                  then check ctx' t1 $ tyShift' (length tys) ty1
-                  else False
+           in if all (\(x, y) -> subtype x y) tysZipTmTys
+                then check ctx' t1 $ tyShift' (length tys) ty1
+                else False
     (TmAbs tyXs1 tmXs t1, TyForAll tyXs2 tys ty1)
       | sameLength tmXs tys && sameLength tyXs1 tyXs2 ->
           let typedTmBinds = map (\(x, y) -> addTypeToBind x y) (zip tmXs tys)
