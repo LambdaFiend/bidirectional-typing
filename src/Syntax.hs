@@ -128,8 +128,6 @@ getFreeTyVars n ty =
        in concat (map (getFreeTyVars n') tys) ++ getFreeTyVars n' ty1
     _ -> []
 
--- This is sort of used experimentally. I'm afraid the constraint generation is flawed. In any case, it seems to be working, as far as I could see. This seems to make the algorithm respect the specification a little more.
-
 changeTypesNames :: [(Name, Name)] -> Type -> Type
 changeTypesNames m ty =
   case ty of

@@ -1,6 +1,7 @@
 module Typing where
 
 import           Data.List
+import           Debug.Trace
 import           Helper
 import           Syntax
 
@@ -74,17 +75,18 @@ check ctx t ty =
           ty'' = tyShift' (k + info) ty'
        in subtype ty'' ty
     (TmAbs tyXs1 tmXs t1, TyForAll tyXs2 tys ty1)
-      | sameLength tyXs1 tyXs2 && areAnnotated tmXs ->
+      | sameLength tmXs tys && sameLength tyXs1 tyXs2 && areAnnotated tmXs ->
           let ctx' = zipBindings tmXs ++ zipBindings tyXs1 ++ ctx
               tysZipTmTys = zip tys (getTypes tmXs)
-           in if all (\(x, y) -> subtype x y) tysZipTmTys
-                then check ctx' t1 ty1
-                else False
+           in trace (show $ (t1, ty1, ctx')) $
+                if all (\(x, y) -> subtype x y) tysZipTmTys
+                  then check ctx' t1 $ tyShift' (length tys) ty1
+                  else False
     (TmAbs tyXs1 tmXs t1, TyForAll tyXs2 tys ty1)
-      | sameLength tyXs1 tyXs2 ->
+      | sameLength tmXs tys && sameLength tyXs1 tyXs2 ->
           let typedTmBinds = map (\(x, y) -> addTypeToBind x y) (zip tmXs tys)
               ctx' = zipBindings typedTmBinds ++ zipBindings tyXs1 ++ ctx
-           in check ctx' t1 ty1
+           in check ctx' t1 $ tyShift' (length tys) ty1
     (TmApp t1 tys ts, _) ->
       case synth ctx t1 of
         TyForAll tyXs tys' ty1'
