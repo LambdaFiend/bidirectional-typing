@@ -39,8 +39,7 @@ executable LTIBDT
     Lexer,
     Parser,
     Syntax,
-    Typing,
-    Evaluation
+    Typing
 
   --other-extensions:
 

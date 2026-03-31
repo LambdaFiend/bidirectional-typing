@@ -37,7 +37,6 @@ Regarding the Typing for each syntax construct, I might add it later on. This sy
 | fun\[X1,...,Xn\](x1:T1,...,xm:Tm)t | Function definition but<br>with type annotations |
 | t1 \[T1,...,Tn\] (t21,...,t2m) | Function application |
 | t1 (t21,...,t2m) | Function application when the<br>type variables will be inferred |
-| let x = t1 in t2 | Let-binding, binds the<br>term t1 to x into<br>the context for t2, so<br>that it may be used in t2 |
 
 If there are type annotations in a function definition's term arguments, they must appear in every single term argument.
 
@@ -81,7 +80,7 @@ In contrast to YALCI's REPL, this one does not include desugaring, as it would h
 
 This section will be expanded in the near future.
 
-LTIBDT can now type! I've also added let-bindings. I'm likely not going to add base types, considering that it wouldn't be fruitful enough, from my perspective. I'm still deciding between adding evaluation and not adding evaluation. Probably not, I would say. This means that the implementation is mostly completed, besides the casual bugs.
+LTIBDT can now type! I'm likely going to add evaluation as well, let-bindings and some base types. Well, I might *only* add let-bindings.
 
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
