@@ -2,6 +2,7 @@ module Display where
 
 import           Lexer
 import           Syntax
+import Debug.Trace
 
 showTerm' :: TermNode -> String
 showTerm' t =
@@ -23,7 +24,7 @@ showTerm ctx t =
            in "(" ++ "λ" ++ x' ++ "." ++ showTerm (x' : ctx) t1 ++ ")"
         TmApp t1 t2 -> "(" ++ showTerm' t1 ++ " " ++ showTerm' t2 ++ ")"
         TmUnit -> "()"
-        TmAnno t1 ty -> "(" ++ showTerm' t1 ++ " : " ++ showType' ty ++ ")"
+        TmAnno t1 ty -> "(" ++ showTerm (getOuterBindings ty ++ ctx) t1 ++ " : " ++ showType ctx ty ++ ")"
   where
     showTerm' = showTerm ctx
     fixName' = fixName ctx

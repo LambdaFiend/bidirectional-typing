@@ -79,6 +79,7 @@ shift c d t =
         case tm of
           TmVar k l x -> (TermNode fi $ TmVar (if k < c then k else k + d) (l + d) x, id', id', tyShift' d)
           TmAbs _ _ -> (t, shift (c + 1) d, shift', tyShift c d)
+          TmAnno t1 ty1 -> (t, shift (c + length (getOuterBindings ty1)) d, shift', tyShift c d)
           _ -> (t, shift', shift', tyShift c d)
 
 subst' :: Index -> TermNode -> TermNode -> TermNode
@@ -91,6 +92,7 @@ subst c j s t =
         case tm of
           TmVar k _ _ -> (if k == j + c then shift' 0 (j + c) s else t, id', id', id :: Type -> Type)
           TmAbs _ _ -> (t, subst (c + 1) j s, subst', id :: Type -> Type)
+          TmAnno t1 ty1 -> (t, subst (c + length (getOuterBindings ty1)) j s, subst', id :: Type -> Type)
           _ -> (t, subst', subst', id :: Type -> Type)
 
 genIndex' :: TermNode -> TermNode
@@ -104,7 +106,8 @@ genIndex ctx t =
           TmVarRaw x | elem x ctx -> (TermNode fi $ TmVar (length $ takeWhile (/= x) ctx) (length ctx) x, genIndex', genIndex', id :: Type -> Type)
           TmVarRaw x -> (TermNode fi $ TmError ("Free variables are not allowed: " ++ x), genIndex', genIndex', id :: Type -> Type)
           TmAbs x _ -> (t, genIndex (x : ctx), genIndex', id :: Type -> Type)
-          _ -> (t, genIndex', genIndex', genIndexType [])
+          TmAnno t1 ty1 -> (t, genIndex (getOuterBindings ty1 ++ ctx), genIndex', genIndexType ctx)
+          _ -> (t, genIndex', genIndex', genIndexType ctx)
   where
     genIndexType :: [Name] -> Type -> Type
     genIndexType ctx ty =

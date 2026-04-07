@@ -29,6 +29,7 @@ data TermNode = TermNode
   deriving (Eq, Show)
 
 data AppliedFunction = AppliedFunction Type TermNode
+  deriving (Eq, Show)
 
 data Term
   = TmVarRaw Name
@@ -65,3 +66,7 @@ fromConstraintBind (ConstraintBind x ty1) = (x, ty1)
 
 noPos :: FileInfo
 noPos = AlexPn (-1) (-1) (-1)
+
+getOuterBindings :: Type -> NameContext
+getOuterBindings (TyForAll x ty1) = x : getOuterBindings ty1
+getOuterBindings _ = []

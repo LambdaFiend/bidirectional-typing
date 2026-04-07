@@ -18,7 +18,7 @@ eval1 t = let tm = getTm t; fi = getFI t in
     TmAnno t1 ty | not $ isVal t1 ->
       let result = eval1 t1
        in checkError result $ TmAnno result ty
-    TmAnno v1 _ -> getTm v1
+    TmAnno v1 ty -> getTm $ shift' 0 (negate $ length $ getOuterBindings ty) $ collapseAnnos v1
     _ -> TmError $ "No rule applies" ++ showFileInfo fi
   where
     checkError :: TermNode -> Term -> Term
@@ -26,6 +26,15 @@ eval1 t = let tm = getTm t; fi = getFI t in
       case getTm term of
         TmError e -> TmError e
         _ -> result
+    -- Goodbye subject reduction... I promise we'll meet again, one day
+    collapseAnnos :: TermNode -> TermNode
+    collapseAnnos (TermNode fi tm) =
+      TermNode fi $
+        case tm of
+          TmApp t1 t2 -> TmApp (collapseAnnos t1) (collapseAnnos t2)
+          TmAbs x t1 -> TmAbs x (collapseAnnos t1)
+          TmAnno t1 ty1 -> getTm $ shift' 0 (negate $ length $ getOuterBindings ty1) $ collapseAnnos t1
+          _ -> tm
 
 type Counter = Int
 

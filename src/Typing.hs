@@ -4,11 +4,15 @@ import           Data.List
 import           Display
 import           Helper
 import           Syntax
+import Debug.Trace
 
 synth' :: TermNode -> Type
 synth' t =
   let (ty, ctx, _) = synth [] 0 t
-   in freshenVarExists $ substCtxToTy ctx ty
+   in
+    if isCtxWellFormed ctx
+      then freshenVarExists $ substCtxToTy ctx ty
+      else TyError "Result context is not well formed"
 
 synth :: BindingContext -> Index -> TermNode -> (Type, BindingContext, Index)
 synth ctx n t =
@@ -111,6 +115,10 @@ subtype ctx n ty1 ty2 =
 instantiateL :: BindingContext -> Index -> Type -> Type -> (Bool, BindingContext, Index)
 instantiateL ctx n ty1 ty2 =
   case (ty1, ty2) of
+    (TyVarExists x1, _)
+      | isMonotype ty2 && elem (TyVarExistsBind x1) ctx && isTyWellFormed (snd $ splitContext ctx $ TyVarExistsBind x1) ty2 ->
+          let (ctx1, ctx2) = splitContext ctx $ TyVarExistsBind x1
+           in (True, ctx1 ++ [ConstraintBind x1 ty2] ++ ctx2, n)
     (TyVarExists x1, TyVarExists x2)
       | elem (TyVarExistsBind x1) ctx && elem (TyVarExistsBind x2) ctx && elem (TyVarExistsBind x1) (snd $ splitContext ctx $ TyVarExistsBind x2) ->
           let (ctx1, ctx2) = splitContext ctx $ TyVarExistsBind x2
@@ -128,15 +136,15 @@ instantiateL ctx n ty1 ty2 =
       | elem (TyVarExistsBind x1) ctx ->
           let (b, ctx', n') = instantiateL (TyVarBind x2 : ctx) n ty1 ty21
            in (b, cutContext ctx' $ TyVarBind x2, n')
-    (TyVarExists x1, _)
-      | isMonotype ty2 && elem (TyVarExistsBind x1) ctx ->
-          let (ctx1, ctx2) = splitContext ctx $ TyVarExistsBind x1
-           in (isTyWellFormed ctx2 ty2, ctx1 ++ [ConstraintBind x1 ty2] ++ ctx2, n)
     _ -> (False, ctx, n)
 
 instantiateR :: BindingContext -> Index -> Type -> Type -> (Bool, BindingContext, Index)
 instantiateR ctx n ty1 ty2 =
   case (ty1, ty2) of
+    (_, TyVarExists x2)
+      | isMonotype ty1 && elem (TyVarExistsBind x2) ctx && isTyWellFormed (snd $ splitContext ctx $ TyVarExistsBind x2) ty1 ->
+          let (ctx1, ctx2) = splitContext ctx $ TyVarExistsBind x2
+           in (True, ctx1 ++ [ConstraintBind x2 ty1] ++ ctx2, n)
     (TyVarExists x1, TyVarExists x2)
       | elem (TyVarExistsBind x1) ctx && elem (TyVarExistsBind x2) ctx && elem (TyVarExistsBind x2) (snd $ splitContext ctx $ TyVarExistsBind x1) ->
           let (ctx1, ctx2) = splitContext ctx $ TyVarExistsBind x1
@@ -156,10 +164,6 @@ instantiateR ctx n ty1 ty2 =
               ctx' = TyVarExistsBind x' : MarkerBind x' : ctx
               (b, ctx'', n') = instantiateR ctx' (n + 1) (typingEvalSubst (TyVarExists x') ty11) ty2
            in (b, cutContext ctx'' $ MarkerBind x', n')
-    (_, TyVarExists x2)
-      | isMonotype ty1 && elem (TyVarExistsBind x2) ctx ->
-          let (ctx1, ctx2) = splitContext ctx $ TyVarExistsBind x2
-           in (isTyWellFormed ctx2 ty1, ctx1 ++ [ConstraintBind x2 ty1] ++ ctx2, n)
     _ -> (False, ctx, n)
 
 -- REFACTOR!!!
