@@ -40,7 +40,7 @@ synth ctx t =
     TmAppInfer t1 ts ->
       case synth ctx t1 of
         TyForAll tyXs tys ty1
-          | length tyXs > 0 ->
+          | length tyXs > 0 && sameLength ts tys ->
               let tys' = map (synth ctx) ts
                   tyXsLen = length tyXs
                   tys'' = map (tyShift (-tyXsLen) (-tyXsLen)) tys
@@ -101,7 +101,7 @@ check ctx t ty =
     (TmAppInfer t1 ts, _) ->
       case synth ctx t1 of
         TyForAll tyXs tys ty1
-          | length tyXs > 0 ->
+          | length tyXs > 0 && sameLength ts tys ->
               let tys' = map (synth ctx) ts
                   tyXsLen = length tyXs
                   tys'' = map (tyShift (-tyXsLen) (-tyXsLen)) tys
