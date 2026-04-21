@@ -2,7 +2,6 @@ module Display where
 
 import           Lexer
 import           Syntax
-import Debug.Trace
 
 showTerm' :: TermNode -> String
 showTerm' t =
