@@ -77,13 +77,5 @@ Most of the commands are simple and related in purpose. The table is dense becau
 
 In contrast to YALCI's REPL, this one does not include any form of desugaring or evaluation, as it would hold no relevance to the language and its respective type system (or, in the case of evaluation, the objective of making LTIBDT).
 
-## Some insights and opinions
-
-LTIBDT can now type! I've also added let-bindings. No other addition will be made, other than getting rid of bugs.
-
-I will say a couple more things, eventually.
-
-I probably should refactor the code, again. Maybe the same for SFBDT.
-
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
