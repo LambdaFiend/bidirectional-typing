@@ -78,6 +78,10 @@ Most of the commands are simple and related in purpose. The table is dense becau
 
 In contrast to YALCI's REPL, this one does not include desugaring, as it would hold no relevance to the language and its respective type system.
 
+## A bug
+
+There is a bug that I'm aware of, it can easily be fixed but I'm not sure I'll bother for a while. Simply put, variable names can collide when they shouldn't. For that reason, some non-sensical annotated terms are considered well-typed by SFBDT.
+
 ## Report any bugs
 Do not forget to report any bugs. I'll be very glad to listen to any complaints.
 
